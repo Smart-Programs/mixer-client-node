@@ -13,10 +13,18 @@
 	"scripts": {
 		"build": "tsc"
 	},
-	"keywords": [ "mixer", "client", "api", "node", "constellation" ],
+	"keywords": [
+		"mixer",
+		"client",
+		"api",
+		"node",
+		"constellation"
+	],
 	"author": "Garret (Unsmart)",
 	"license": "ISC",
 	"dependencies": {
+		"request": "^2.88.0",
+		"request-promise": "^4.2.4",
 		"simple-rate-limiter": "^0.2.3",
 		"ws": "^6.2.1"
 	},
