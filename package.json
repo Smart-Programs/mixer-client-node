@@ -1,6 +1,6 @@
 {
 	"name": "mixer-client-node",
-	"version": "1.0.14",
+	"version": "1.0.15",
 	"description": "A node client for connecting to mixer and the mixer services",
 	"main": "lib/index.js",
 	"repository": {
@@ -13,13 +13,7 @@
 	"scripts": {
 		"build": "tsc"
 	},
-	"keywords": [
-		"mixer",
-		"client",
-		"api",
-		"node",
-		"constellation"
-	],
+	"keywords": [ "mixer", "client", "api", "node", "constellation" ],
 	"author": "Garret (Unsmart)",
 	"license": "ISC",
 	"dependencies": {
