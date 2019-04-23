@@ -2,11 +2,18 @@
 	"name": "mixer-client-node",
 	"version": "1.0.0",
 	"description": "A node client for connecting to mixer and the mixer services",
-	"main": "build/index.js",
+	"main": "lib/index.js",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/itsUnsmart/mixer-client-node"
+	},
+	"bugs": {
+		"url": "https://github.com/itsUnsmart/mixer-client-node/issues"
+	},
 	"scripts": {
 		"build": "tsc"
 	},
-	"keywords": [ "mixer" ],
+	"keywords": [ "mixer", "node", "constellation" ],
 	"author": "Garret (Unsmart)",
 	"license": "ISC",
 	"dependencies": {
