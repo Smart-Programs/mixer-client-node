@@ -47,7 +47,9 @@ client.chatService.on(EVENT_NAME*, (data) => {
 }); 
 ```
 *[Event Names](https://dev.mixer.com/reference/chat/events)
-Event: 'closed', sent when the chat socket  is closed no using client.chatService.close(); //Not sent when autoreconnect is set to true (False by default)
+
+Event: 'closed', sent when the chat socket is closed not using client.chatService.close(); 
+Not sent when autoreconnect is set to true (False by default)
 
 #### Send a chat message
 ```
