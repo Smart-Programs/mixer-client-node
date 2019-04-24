@@ -9,19 +9,31 @@ npm install --save mixer-client-node
 ### Client
 ```
 let Mixer = require('mixer-client-node');
+
+//Option 1:
 let client = new Mixer({
 	tokens:  {
 		access:  'xxxxxxxx',
 		refresh:  'xxxxxxxx'
 	},
 	clientid:  'xxxxxxxx',
-	secretid:  'xxxxxxxx'
-},{ // 2nd argument is optional
+	secretid:  'xxxxxxxx' //secret is optional
+},{
 	user: {
 		username: 'Unsmart',
 		userid: 755643,
 		channelid: 529479
 	}
+});
+
+//Option 2:
+let client = new Mixer({
+	tokens:  {
+		access:  'xxxxxxxx',
+		refresh:  'xxxxxxxx'
+	},
+	clientid:  'xxxxxxxx',
+	secretid:  'xxxxxxxx' //secret is optional
 });
 ```
 
