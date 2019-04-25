@@ -1,8 +1,6 @@
 /* jshint esversion: 8 */
-import limiter = require('simple-rate-limiter');
 import request = require('request-promise');
 import errors = require('request-promise/errors');
-import { getBucket } from './RequestBuckets';
 
 export function requestAPI(options: RequestOptions) {
 	return new Promise((resolve, reject) => {
@@ -16,78 +14,26 @@ export function requestAPI(options: RequestOptions) {
 
 		options.json = true;
 
-		switch (getBucket(options.uri, options.method)) {
-			case 'chats':
-				chatsBucket(options)
-					.then((res) => {
-						resolve(res);
-					})
-					.catch((err) => {
-						reject(err);
-					});
-				break;
-			default:
-				globalBucket(options)
-					.then((res) => {
-						resolve(res);
-					})
-					.catch((err) => {
-						reject(err);
-					});
-				break;
-		}
-	});
-}
-
-function globalBucket(options: RequestOptions) {
-	return new Promise((resolve, reject) => {
-		let req = limiter(() => {
-			request(options)
-				.then((res) => {
-					resolve(res);
-				})
-				.catch(errors.StatusCodeError, (reason) => {
+		request(options)
+			.then(resolve)
+			.catch(errors.StatusCodeError, (reason) => {
+				if (reason.statusCode === 429) {
+					setTimeout(() => {
+						requestAPI(options);
+					}, Number(reason.response.headers['X-RateLimit-Reset']));
+				} else {
 					reject({
 						statusCode: reason.statusCode,
 						error: reason.error
 					});
-				})
-				.catch(errors.RequestError, (reason) => {
-					reject({
-						statusCode: reason.response.statusCode,
-						error: reason.cause
-					});
+				}
+			})
+			.catch(errors.RequestError, (reason) => {
+				reject({
+					statusCode: reason.response.statusCode,
+					error: reason.cause
 				});
-		})
-			.to(950)
-			.per(60000);
-		req();
-	});
-}
-
-function chatsBucket(options: RequestOptions) {
-	return new Promise((resolve, reject) => {
-		let req = limiter(() => {
-			request(options)
-				.then((res) => {
-					resolve(res);
-				})
-				.catch(errors.StatusCodeError, (reason) => {
-					reject({
-						statusCode: reason.statusCode,
-						error: reason.error
-					});
-				})
-				.catch(errors.RequestError, (reason) => {
-					reject({
-						statusCode: reason.response.statusCode,
-						error: reason.cause
-					});
-				});
-		})
-			.to(450)
-			.per(60000);
-		req();
+			});
 	});
 }
 

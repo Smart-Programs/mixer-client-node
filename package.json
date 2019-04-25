@@ -1,6 +1,6 @@
 {
 	"name": "mixer-client-node",
-	"version": "1.0.2",
+	"version": "1.0.21",
 	"description": "A node client for connecting to mixer and the mixer services",
 	"main": "lib/index.js",
 	"repository": {
@@ -19,7 +19,6 @@
 	"dependencies": {
 		"request": "^2.88.0",
 		"request-promise": "^4.2.4",
-		"simple-rate-limiter": "^0.2.3",
 		"ws": "^6.2.1"
 	},
 	"devDependencies": {
