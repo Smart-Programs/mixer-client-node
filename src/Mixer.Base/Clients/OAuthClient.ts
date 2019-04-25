@@ -30,11 +30,10 @@ export function refreshAuth(client: Client) {
 
 		requestAPI(options)
 			.then((response: RefreshAuthResponse) => {
-				response.expires_in = Date.now() + 1000 * response.expires_in;
 				client.setTokens({
 					access: response.access_token,
 					refresh: response.refresh_token,
-					expires: response.expires_in
+					expires: (Date.now() + 1000 * response.expires_in) / 1000
 				});
 				resolve(response);
 			})
