@@ -18,12 +18,10 @@ export function requestAPI(options: RequestOptions) {
 			.then(resolve)
 			.catch(errors.StatusCodeError, (reason) => {
 				if (reason.statusCode === 429) {
-					let timeout: number;
-					let header = reason.response.headers['X-RateLimit-Reset'] as any;
-					if (header && parseInt(header) !== NaN && !isNaN(header)) {
+					let timeout: number = 3000;
+					let header = +reason.response.headers['X-RateLimit-Reset'];
+					if (isNaN(header)) {
 						timeout = Number(header) - Date.now().valueOf();
-					} else {
-						timeout = 3000;
 					}
 					setTimeout(() => {
 						requestAPI(options);
