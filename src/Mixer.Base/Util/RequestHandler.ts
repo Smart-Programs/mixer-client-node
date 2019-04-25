@@ -20,7 +20,7 @@ export function requestAPI(options: RequestOptions) {
 				if (reason.statusCode === 429) {
 					let timeout: number;
 					let header = reason.response.headers['X-RateLimit-Reset'] as any;
-					if (header && isNaN(header)) {
+					if (header && parseInt(header) !== NaN && !isNaN(header)) {
 						timeout = Number(header) - Date.now().valueOf();
 					} else {
 						timeout = 3000;
