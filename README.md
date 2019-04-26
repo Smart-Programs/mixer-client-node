@@ -6,9 +6,12 @@ This is a client library for [Mixer](https://mixer.com/) written in Node.js.
 npm install --save mixer-client-node
 ```
 ## Usage
+
+[Example on runkit](https://runkit.com/unsmart/mixer-client-node-example)
+
 ### Client
 ```
-let Mixer = require('mixer-client-node');
+let Mixer = require('mixer-client-node').Client;
 
 //Option 1:
 let client = new Mixer({
