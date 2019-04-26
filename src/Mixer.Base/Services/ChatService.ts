@@ -27,7 +27,7 @@ class ChatService extends EventEmitter {
 				this.connect(channelid, userid, response.endpoints[0], response.authkey);
 			})
 			.catch((error) => {
-				this.emit('error', error);
+				this.emit('error', error, channelid);
 			});
 	}
 
@@ -42,13 +42,7 @@ class ChatService extends EventEmitter {
 				json: true
 			};
 
-			requestAPI(opts)
-				.then((response) => {
-					resolve(response);
-				})
-				.catch((error) => {
-					reject(error);
-				});
+			requestAPI(opts).then(resolve).catch(reject);
 		});
 	}
 
