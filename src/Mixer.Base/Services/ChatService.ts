@@ -53,13 +53,13 @@ class ChatService extends EventEmitter {
 			this.emit('join', 'Joining chat ' + channelid + ' with user ' + userid);
 			this.sendPacket('auth', [ channelid, userid, authkey ], channelid);
 			this.sendPacket('optOutEvents', [ 'UserJoin', 'UserLeave' ], channelid);
-			this.hookEventListeners(channelid, socket);
+			this.hookEventListeners(channelid);
 		});
 	}
 
-	private hookEventListeners(channelid: number, socket: any) {
+	private hookEventListeners(channelid: number) {
 		this.listener.set(channelid, true);
-		socket.on('message', (response) => {
+		this.socket.get(channelid).on('message', (response) => {
 			if (!this.listener) return;
 			response = JSON.parse(response);
 			if (response.type == 'reply') {
@@ -69,14 +69,14 @@ class ChatService extends EventEmitter {
 			}
 		});
 
-		socket.on('error', (error) => {
+		this.socket.get(channelid).on('error', (error) => {
 			if (!this.listener) return;
 			this.emit('error', error, channelid);
 		});
 
-		socket.on('close', () => {
+		this.socket.get(channelid).on('close', () => {
 			if (!this.listener.get(channelid)) return;
-			if (this.autoReconnect) this.reconnect(channelid);
+			if (this.autoReconnect.get(channelid)) this.reconnect(channelid);
 			else this.emit('closed', channelid);
 		});
 	}
@@ -139,12 +139,15 @@ class ChatService extends EventEmitter {
 	public close(channelid?: number) {
 		let id: number;
 		if (this.socket.size === 1) id = this.socket.keys().next().value;
+		else if (this.socket.size === 0)
+			this.emit('error', 'You must join a channel first using the join() method', null);
 		else id = channelid;
 
 		if (id && this.socket.get(id)) {
 			this.unhookEventListeners(id);
 			this.socket.get(id).terminate();
 
+			this.autoReconnect.delete(id);
 			this.listener.delete(id);
 			this.socket.delete(id);
 		} else {
