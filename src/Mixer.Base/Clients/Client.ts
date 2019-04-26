@@ -33,7 +33,13 @@ export class Client {
 	}
 
 	public refresh(): Promise<{}> {
-		return refreshAuth(this);
+		if (this.refreshToken()) return refreshAuth(this);
+		else
+			return Promise.reject({
+				statusCode: 404,
+				error: 'No refresh token available',
+				message: 'No refresh token available'
+			});
 	}
 
 	public introspect(token: string): Promise<{}> {
@@ -100,7 +106,7 @@ export interface User {
 	};
 	tokens?: {
 		accessToken: string;
-		refreshToken: string;
+		refreshToken?: string;
 	};
 	settings?: {
 		ignoredUsers?: Array<String>;
