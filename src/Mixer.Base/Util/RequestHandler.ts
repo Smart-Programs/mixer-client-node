@@ -5,10 +5,10 @@ import errors = require('request-promise/errors');
 export function requestAPI(options: RequestOptions) {
 	return new Promise((resolve, reject) => {
 		if (options.headers) {
-			options.headers['User-Agent'] = "Unsmart's Node-Client";
+			options.headers['User-Agent'] = "Unsmart's Mixer-Client-Node";
 		} else {
 			options.headers = {
-				'User-Agent': "Unsmart's Node-Client"
+				'User-Agent': "Unsmart's Mixer-Client-Node"
 			};
 		}
 

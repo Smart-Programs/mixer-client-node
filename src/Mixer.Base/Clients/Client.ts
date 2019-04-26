@@ -51,7 +51,6 @@ export class Client {
 		useridOrReconnect?: number | boolean,
 		autoReconnect?: boolean
 	) {
-		this.chatService.close();
 		if (typeof channelUserorReconnect === 'number') {
 			if (typeof useridOrReconnect === 'number') {
 				this.chatService.join(

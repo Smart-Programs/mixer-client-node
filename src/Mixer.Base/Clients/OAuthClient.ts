@@ -85,9 +85,7 @@ export function validateToken(client: Client, token: string) {
 					});
 				}
 			})
-			.catch((error) => {
-				reject(error);
-			});
+			.catch(reject);
 	});
 }
 

@@ -41,7 +41,6 @@ let client = new Mixer({
 The following is a list of all the chat methods implemented.
 
 ####  Join a chat
-Note: only one chat per client currently allowed, trying to join a 2nd chat will emit an error
 ```
 client.joinChat(CHANNELID_TO_JOIN, USERID_TO_JOIN, AUTO_RECONNECT); // userid MUST be the owner of the tokens set in constructor
 client.joinChat(CHANNELID_TO_JOIN, USERID_TO_JOIN);                // userid MUST be the owner of the tokens set in constructor
@@ -54,23 +53,37 @@ Anonoymous chat joining is not supported and not planned currently.
 
 #### Listen to chat events
 ```
-client.chatService.on(EVENT_NAME*, (data) => {
+client.chatService.on('reply', (error, data, channelid) => {
+	if(error)  //Oh no error! (Sent by the server when a message sent to the server was rejected)
+	//data is the data from the reply
+	//channelid is the channelid you are connected to that the error happened on
+});
+
+client.chatService.on(EVENT_NAME*, (data, channelid) => {
 	//Do what you want with the response (this is the data object from the events response)
-}); 
+});
+
+client.chatService.on('error', (error, channelid) => {
+	//error is an error not related to a message sent to the server
+	//could be an error joining the chat because authtoken is invalid
+	//could be because you tried to send a message to a closed socket
+});
+
+client.chatService.on('closed', channelid => {
+	//Socket for channelid was closed (Not sent if autoreconnect set to true)
+});
 ```
 *[Event Names](https://dev.mixer.com/reference/chat/events)
 
-Event: 'closed', sent when the chat socket is closed not using client.chatService.close(); 
-Not sent when autoreconnect is set to true (False by default)
-
 #### Send a chat message
 ```
-client.chatService.sendMessage("Enter a message to send");
+client.chatService.sendMessage("Enter a message to send", CHANNEL_ID); //CHANNEL_ID not needed if you are only connected to one chat
 ```
 
 #### Close connection to chat
 ```
-client.chatService.close(); //No 'closed' event will be emitted
+client.chatService.close(CHANNEL_ID); //CHANNEL_ID not needed if you are only connected to one chat
+//No 'closed' event will be emitted
 ```
 
 ### Authentication
