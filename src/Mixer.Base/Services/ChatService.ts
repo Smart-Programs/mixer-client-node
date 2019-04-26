@@ -95,15 +95,18 @@ class ChatService extends EventEmitter {
 			this.socket.get(channelid).send(JSON.stringify(packet), (error) => {
 				if (error) this.emit('reply', error, {}, channelid);
 			});
+		} else {
+			this.emit('error', 'Socket is not open cant send packet', channelid);
 		}
 	}
 
 	public sendMessage(message: string, channelid?: number) {
-		if (this.socket.size === 1) channelid = this.socket.values().next().value;
-
-		if (channelid) {
-			if (this.socket.get(channelid)) this.sendPacket('msg', [ message ], channelid);
-			else this.emit('error', 'No socket connected', channelid);
+		let id: number;
+		if (this.socket.size === 1) id = this.socket.keys().next().value;
+		else id = channelid;
+		if (id) {
+			if (this.socket.get(id)) this.sendPacket('msg', [ message ], id);
+			else this.emit('error', 'No socket connected', id);
 		} else {
 			this.emit(
 				'error',
@@ -113,12 +116,14 @@ class ChatService extends EventEmitter {
 	}
 
 	public reconnect(channelid?: number) {
-		if (this.socket.size === 1) channelid = this.socket.values().next().value;
+		let id: number;
+		if (this.socket.size === 1) id = this.socket.keys().next().value;
+		else id = channelid;
 
-		if (channelid) {
+		if (id) {
 			if (this.userid && this.accessToken) {
-				this.close(channelid);
-				this.join(this.userid, channelid, this.accessToken);
+				this.close(id);
+				this.join(this.userid, id, this.accessToken);
 			} else {
 				this.emit('error', 'You must join a channel first using the join() method');
 			}
@@ -128,14 +133,16 @@ class ChatService extends EventEmitter {
 	}
 
 	public close(channelid?: number) {
-		if (this.socket.size === 1) channelid = this.socket.values().next().value;
+		let id: number;
+		if (this.socket.size === 1) id = this.socket.keys().next().value;
+		else id = channelid;
 
-		if (channelid && this.socket.get(channelid)) {
-			this.unhookEventListeners(channelid);
-			this.socket.get(channelid).terminate();
+		if (id && this.socket.get(id)) {
+			this.unhookEventListeners(id);
+			this.socket.get(id).terminate();
 
-			this.listener.delete(channelid);
-			this.socket.delete(channelid);
+			this.listener.delete(id);
+			this.socket.delete(id);
 		} else {
 			this.emit(
 				'error',
