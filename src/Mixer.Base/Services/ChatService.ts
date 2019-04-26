@@ -125,10 +125,14 @@ class ChatService extends EventEmitter {
 				this.close(id);
 				this.join(this.userid, id, this.accessToken);
 			} else {
-				this.emit('error', 'You must join a channel first using the join() method');
+				this.emit('error', 'You must join a channel first using the join() method', null);
 			}
 		} else {
-			this.emit('error', 'You must provide a channelid to reconnect to when connected to more than one channel');
+			this.emit(
+				'error',
+				'You must provide a channelid to reconnect to when connected to more than one channel',
+				null
+			);
 		}
 	}
 
@@ -146,7 +150,8 @@ class ChatService extends EventEmitter {
 		} else {
 			this.emit(
 				'error',
-				'You must provide a channelid to close connection to when connected to more than one channel'
+				'You must provide a channelid to close connection to when connected to more than one channel',
+				null
 			);
 		}
 	}
