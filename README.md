@@ -17,30 +17,24 @@ npm install --save mixer-client-node
 ```
 let Mixer = require('mixer-client-node').Client;
 
-//Option 1:
+//Option 1: (All possibilities for inputs)
 let client = new Mixer({
-	tokens:  {
+	tokens?:  {
 		access:  'xxxxxxxx',
-		refresh:  'xxxxxxxx' //refresh is optional
-	}, //tokens is optional
+		refresh?:  'xxxxxxxx'
+	},
 	clientid:  'xxxxxxxx',
-	secretid:  'xxxxxxxx' //secret is optional
+	secretid?:  'xxxxxxxx'
 },{
 	user: {
-		username: 'Unsmart',
 		userid: 755643,
 		channelid: 529479
-	}
+	} // If user is defined it needs both userid and channelid to work properly
 });
 
-//Option 2:
+//Option 2: (Only required variables)
 let client = new Mixer({
-	tokens:  {
-		access:  'xxxxxxxx',
-		refresh:  'xxxxxxxx' //refresh is optional
-	}, //tokens is optional
-	clientid:  'xxxxxxxx',
-	secretid:  'xxxxxxxx' //secret is optional
+	clientid:  'xxxxxxxx'
 });
 ```
 

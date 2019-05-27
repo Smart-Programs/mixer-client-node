@@ -98,14 +98,7 @@ export interface ClientType {
 
 export interface User {
 	user: {
-		username: string
 		userid: number
 		channelid: number
 	}
-	tokens?: AuthTokens
-	settings?: {
-		ignoredUsers?: Array<String>
-		ignoredMods?: Array<String>
-	}
-	_id?: string
 }
