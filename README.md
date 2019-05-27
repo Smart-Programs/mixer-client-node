@@ -21,8 +21,8 @@ let Mixer = require('mixer-client-node').Client;
 let client = new Mixer({
 	tokens:  {
 		access:  'xxxxxxxx',
-		refresh:  'xxxxxxxx'
-	},
+		refresh:  'xxxxxxxx' //refresh is optional
+	}, //tokens is optional
 	clientid:  'xxxxxxxx',
 	secretid:  'xxxxxxxx' //secret is optional
 },{
@@ -37,8 +37,8 @@ let client = new Mixer({
 let client = new Mixer({
 	tokens:  {
 		access:  'xxxxxxxx',
-		refresh:  'xxxxxxxx'
-	},
+		refresh:  'xxxxxxxx' //refresh is optional
+	}, //tokens is optional
 	clientid:  'xxxxxxxx',
 	secretid:  'xxxxxxxx' //secret is optional
 });
@@ -56,7 +56,7 @@ client.joinChat(CHANNELID_TO_JOIN);                // Must have set user in cons
 client.joinChat(AUTO_RECONNECT);                  // Must have set user in constructor
 client.joinChat();                               // Must have set user in constructor
 ```
-Anonoymous chat joining is not supported and not planned currently.
+Anonymous chat joining is not supported and not planned currently.
 
 #### Listen to chat events
 ```
@@ -77,7 +77,7 @@ client.chatService.on('error', (error, channelid) => {
 });
 
 client.chatService.on('closed', channelid => {
-	//Socket for channelid was closed (Not sent if autoreconnect set to true)
+	//Socket for channelid was closed (Not sent if auto reconnect set to true)
 });
 ```
 *[Event Names](https://dev.mixer.com/reference/chat/events)
@@ -120,6 +120,13 @@ client.introspect("TOKEN_TO_CHECK").then(response =>{
 	console.error('Error: ' + error.error);
 });
 ```
+#### Set Tokens
+```
+client.setTokens({
+	access:  'xxxxxxxx',
+  refresh:  'xxxxxxxx' //refresh is optional
+})
+```
 
 ### API Requests
 Using the request module from the client automatically limits requests to the correct rate-limit.
@@ -140,6 +147,30 @@ client.request(requestOptions).then(response => {
 ```
 
 ### Constellation
+Need to connect to events using the mixer constellation, this client can handle that as well.
+*Note: This is currently a really early test version of my own constellation handler and may be buggy if you notice any bugs during development please submit an issue on the github repo: [https://github.com/Smart-Programs/mixer-client-node](https://github.com/Smart-Programs/mixer-client-node)
+#### Subscribe
 ```
-//Constellation not yet added.
+client.constellationService.subscribe('Event:to:subscribe' || [ 'event:1:sub', 'event:2:sub' ])
+```
+#### Unsubscribe
+```
+client.constellationService.unsubscribe('Event:to:unsubscribe' || [ 'event:1:unsub', 'event:2:unsub' ])
+```
+#### Events
+```
+client.constellationService.on('event', (data, event) => {
+	//Do stuff with data, this is the payload object from the event subscribed to
+	//Event is the event you subscribed to ex: 'channel:1:update'
+})
+
+client.constellationService.on('error', (data, event) => {
+	//Data is the error returned from the socket
+	//Event is the event you subscribed to ex: 'channel:1:update'
+})
+
+client.constellationService.on('closed', (event) => {
+	//The subscription socket was closed
+	//Event is the event you subscribed to ex: 'channel:1:update'
+})
 ```
