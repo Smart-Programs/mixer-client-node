@@ -48,10 +48,9 @@ class ChatService extends EventEmitter {
 		let socket = new WebSocket(endpoint)
 		this.socket.set(channelid, socket)
 		this.socket.get(channelid).on('open', () => {
-			this.emit('join', 'Joining chat ' + channelid + ' with user ' + userid)
-			this.sendPacket('auth', [ channelid, userid, authkey ], channelid)
-			this.sendPacket('optOutEvents', [ 'UserJoin', 'UserLeave' ], channelid)
 			this.hookEventListeners(channelid)
+			this.emit('join', { connectingTo: channelid, userConnecting: userid })
+			this.sendPacket('auth', [ channelid, userid, authkey ], channelid)
 		})
 	}
 
@@ -86,11 +85,15 @@ class ChatService extends EventEmitter {
 			arguments: args
 		}
 		if (this.socket.get(channelid) && this.socket.get(channelid).readyState === 1) {
-			this.socket.get(channelid).send(JSON.stringify(packet), (error) => {
-				if (error) this.emit('reply', error, {}, channelid)
-			})
+			this.socket.get(channelid).send(JSON.stringify(packet))
 		} else {
-			this.emit('error', 'Socket is not open cant send packet', channelid)
+			this.emit('warning', {
+				warning: "Can't Send Packet",
+				reason: 'Socket Closed or No Socket Found',
+				channelid,
+				code: 1000,
+				id: 1
+			})
 		}
 	}
 
@@ -99,10 +102,14 @@ class ChatService extends EventEmitter {
 		if (this.socket.size === 1) id = this.socket.keys().next().value
 		else id = channelid
 		if (id) {
-			if (this.socket.get(id)) this.sendPacket('msg', [ message ], id)
-			else this.emit('error', 'No socket connected', id)
+			this.sendPacket('msg', [ message ], id)
 		} else {
-			this.emit('error', 'You must provide a channelid to send a message to when connected to more than one channel')
+			this.emit('warning', {
+				warning: "Can't Send Packet",
+				reason: 'No ChannelID Specified, you MUST specify this when connected to more than one chat',
+				code: 1000,
+				id: 2
+			})
 		}
 	}
 
@@ -113,20 +120,35 @@ class ChatService extends EventEmitter {
 
 		if (id) {
 			if (this.userid) {
-				this.close(id)
-				this.join(this.userid, id)
+				this.close(id, this.autoReconnect.get(id))
 			} else {
-				this.emit('error', 'You must join a channel first using the join() method', null)
+				this.emit('warning', {
+					warning: 'Not Connected To A Channel',
+					reason: 'You MUST first connect to a channel before you can reconnect',
+					code: 1001,
+					id: 1
+				})
 			}
 		} else {
-			this.emit('error', 'You must provide a channelid to reconnect to when connected to more than one channel', null)
+			this.emit('warning', {
+				warning: 'ChannelID to Reconnect to Not Specified',
+				reason: 'You MUST provide a channelid to reconnect to when connected to multiple channels',
+				code: 1001,
+				id: 2
+			})
 		}
 	}
 
-	public close (channelid?: number) {
+	public close (channelid?: number, rejoin?: boolean) {
 		let id: number
 		if (this.socket.size === 1) id = this.socket.keys().next().value
-		else if (this.socket.size === 0) this.emit('error', 'You must join a channel first using the join() method', null)
+		else if (this.socket.size === 0)
+			this.emit('warning', {
+				warning: 'Not Connected To A Channel',
+				reason: 'You MUST first connect to a channel before you can close a connection',
+				code: 1002,
+				id: 1
+			})
 		else id = channelid
 
 		if (id && this.socket.get(id)) {
@@ -136,12 +158,14 @@ class ChatService extends EventEmitter {
 			this.autoReconnect.delete(id)
 			this.listener.delete(id)
 			this.socket.delete(id)
+			if (rejoin) this.join(this.userid, id, true)
 		} else {
-			this.emit(
-				'error',
-				'You must provide a channelid to close connection to when connected to more than one channel',
-				null
-			)
+			this.emit('warning', {
+				warning: 'ChannelID to Close to Not Specified',
+				reason: 'You MUST provide a channelid to close connection to when connected to multiple channels',
+				code: 1002,
+				id: 2
+			})
 		}
 	}
 }

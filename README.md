@@ -51,8 +51,13 @@ client.joinChat();                               // Must have set user in constr
 ```
 Anonymous chat joining is not supported and not planned currently.
 
-#### Listen to chat events
+#### Chat Events
 ```
+client.chatService.on('join', data => {
+	// data.connectingTo = channelid you are joining
+	// data.userConnection = user you are connecting as
+});
+
 client.chatService.on('reply', (error, data, channelid) => {
 	if(error)  //Oh no error! (Sent by the server when a message sent to the server was rejected)
 	//data is the data from the reply
@@ -64,10 +69,34 @@ client.chatService.on(EVENT_NAME*, (data, channelid) => {
 });
 
 client.chatService.on('error', (error, channelid) => {
-	//error is an error not related to a message sent to the server
-	//could be an error joining the chat because authtoken is invalid
-	//could be because you tried to send a message to a closed socket
+	//channelid is the channelid you are connect/trying to connect to where an error happened
+	//error possibilities:
+	//an http error getting the info about the chat you want to connect to
+	//a socket error
 });
+
+client.chatService.on('warning', warning => {
+	// warning.code = warning code && warning.id = warning id
+	// Code: 1000 ID: 1 = Socket a packet was being sent to was closed
+	// or the socket did not exist (if you did the sendMessage method it most likely
+	means you inputted a channel you are not connected to or closed connection to)
+	// this also contains the channelid (warning.channelid) if you want to reconnect
+
+	// Code: 1000 ID: 2 = You did not specify the channelid to send a message
+	// to channelid must be specified when connected to multiple channels
+
+	// Code: 1001 ID: 1 = You used the reconnect method without first connecting
+	// to a channel
+
+	// Code: 1001 ID: 2 = You used the reconnect method without specifying
+	// the channelid to reconnect to if connected to multiple channels
+
+	// Code: 1002 ID: 1 = You used the close method without first connecting
+	// to a channel
+
+	// Code: 1002 ID: 2 = You used the close method without specifying
+	// the channelid to close connection to if connected to multiple channels
+})
 
 client.chatService.on('closed', channelid => {
 	//Socket for channelid was closed (Not sent if auto reconnect set to true)
@@ -141,7 +170,12 @@ client.request(requestOptions).then(response => {
 
 ### Constellation
 Need to connect to events using the mixer constellation, this client can handle that as well.
-*Note: This is currently a really early test version of my own constellation handler and may be buggy if you notice any bugs during development please submit an issue on the github repo: [https://github.com/Smart-Programs/mixer-client-node](https://github.com/Smart-Programs/mixer-client-node)
+*Note: This is currently a really early test version of my own constellation handler and may be buggy if you notice any bugs during development please submit an issue on the [GitHub Repo](https://github.com/Smart-Programs/mixer-client-node)
+
+Some constellation features may change often and may include breaking changes, if anything ever breaks come back here as this will always be up to date.
+
+Info on what each event returns may not be fully complete as I am still investigating every possibility of what constellation returns.
+
 #### Subscribe
 ```
 client.constellationService.subscribe('Event:to:subscribe' || [ 'event:1:sub', 'event:2:sub' ])
@@ -150,7 +184,7 @@ client.constellationService.subscribe('Event:to:subscribe' || [ 'event:1:sub', '
 ```
 client.constellationService.unsubscribe('Event:to:unsubscribe' || [ 'event:1:unsub', 'event:2:unsub' ])
 ```
-#### Events
+#### Constellation Events
 ```
 client.constellationService.on('event', (data, event) => {
 	//Do stuff with data, this is the payload object from the event subscribed to
