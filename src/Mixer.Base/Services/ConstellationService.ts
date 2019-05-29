@@ -10,34 +10,50 @@ class ConstellationService extends EventEmitter {
 		super()
 
 		this.CONSTELLATION_URL = 'wss://constellation.mixer.com?x-is-bot=true&client-id=' + clientid
+
+		this.socket = new WebSocket(this.CONSTELLATION_URL)
+		this.socket.on('open', () => {
+			this.eventListener()
+		})
+	}
+
+	public getEvents (): Array<string> {
+		return [ ...this.events ]
 	}
 
 	public subscribe (event: string | Array<string>) {
-		if (!this.socket) this.socket = new WebSocket(this.CONSTELLATION_URL)
-
-		event = typeof event === 'string' ? [ event ] : event
-		event = event.filter((name) => this.events.indexOf(name) !== -1)
-
-		if (event.length > 0) {
-			this.connect(event)
+		if (this.socket.readyState !== 1) {
+			this.socket.on('open', () => {
+				this.subscribe(event)
+			})
 		} else {
-			this.emit('warning', 'You are already subscribed to all the events you listed to subscribe to')
+			event = typeof event === 'string' ? [ event ] : event
+			event = event.filter((name) => this.events.indexOf(name) !== -1)
+			if (event.length > 0) {
+				this.connect(event)
+			} else {
+				this.emit('warning', {
+					warning: "Can't Subscribe",
+					reason: 'You are already subscribed to the event(s) you said to subscribe to',
+					events: event,
+					code: 2001,
+					id: 1
+				})
+			}
 		}
 	}
 
 	private connect (event: Array<string>) {
-		this.socket.on('open', () => {
-			this.emit('subscribe', 'Subscribing to an event', event)
-			this.sendPacket('livesubscribe', { events: event })
-			this.eventListener(event)
-		})
+		this.emit('subscribe', { events: event })
+		this.sendPacket('livesubscribe', { events: event })
+		this.events = [ ...event, ...this.events ]
 	}
 
-	private eventListener (event: Array<string>) {
+	private eventListener () {
 		this.socket.on('message', (data) => {
 			data = JSON.parse(data)
 			if (data.type === 'reply') {
-				this.emit(data.type, { result: data.result, error: data.error }, event)
+				this.emit(data.type, { result: data.result, error: data.error, data })
 			} else {
 				if (data.data.payload) {
 					this.emit(data.type, data.data.payload, data.data.channel)
@@ -61,11 +77,16 @@ class ConstellationService extends EventEmitter {
 			params
 		}
 		if (this.socket && this.socket.readyState === 1) {
-			this.socket.send(JSON.stringify(packet), (error) => {
-				if (error) this.emit('error', error)
-			})
+			this.socket.send(JSON.stringify(packet))
 		} else {
-			this.emit('error', 'Socket is not open cant send packet')
+			this.emit('warning', {
+				warning: "Can't Send Packet",
+				reason: 'Socket Closed or No Socket Found',
+				method,
+				events: params,
+				code: 2000,
+				id: 1
+			})
 		}
 	}
 
@@ -75,8 +96,15 @@ class ConstellationService extends EventEmitter {
 
 		if (event.length > 0) {
 			this.sendPacket('liveunsubscribe', { events: event })
+			this.events = this.events.filter((name) => event.indexOf(name) !== -1)
 		} else {
-			this.emit('warning', 'You are not subscribed to any of events you listed to unsubscribe to')
+			this.emit('warning', {
+				warning: "Can't Send Packet",
+				reason: 'You are not subscribed to any of the events you listed to unsubscribe to',
+				events: event,
+				code: 2000,
+				id: 2
+			})
 		}
 	}
 }

@@ -186,17 +186,33 @@ client.constellationService.unsubscribe('Event:to:unsubscribe' || [ 'event:1:uns
 ```
 #### Constellation Events
 ```
+client.constellationService.on('subscribe', (data) => {
+	// data.events = array of events you are newly subscribing too
+	// Note client.constellationService.getEvents() will return
+	// events you are subbed to
+})
+
 client.constellationService.on('event', (data, event) => {
 	//Do stuff with data, this is the payload object from the event subscribed to
 	//Event is the event you subscribed to ex: 'channel:1:update'
 })
 
-client.constellationService.on('error', (data) => {
-	//Data is the error returned from the socket
+client.constellationService.on('reply', (data) => {
+	// data.result
+	// data.error
+	// data.data (full message from server)
 })
 
 client.constellationService.on('warning', (data) => {
-	//Warning sent when you try to subscribe/unsubscribe to an event you are already subscribed/unsubscribed from
+	// data.warning
+	// data.reason
+	// data.code
+	// data.id
+	// data.events
+})
+
+client.constellationService.on('error', (data) => {
+	//Data is the error returned from the socket
 })
 
 client.constellationService.on('closed', () => {
