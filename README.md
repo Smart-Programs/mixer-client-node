@@ -156,13 +156,15 @@ client.constellationService.on('event', (data, event) => {
 	//Event is the event you subscribed to ex: 'channel:1:update'
 })
 
-client.constellationService.on('error', (data, event) => {
+client.constellationService.on('error', (data) => {
 	//Data is the error returned from the socket
-	//Event is the event you subscribed to ex: 'channel:1:update'
 })
 
-client.constellationService.on('closed', (event) => {
-	//The subscription socket was closed
-	//Event is the event you subscribed to ex: 'channel:1:update'
+client.constellationService.on('warning', (data) => {
+	//Warning sent when you try to subscribe/unsubscribe to an event you are already subscribed/unsubscribed from
+})
+
+client.constellationService.on('closed', () => {
+	//The subscription socket was closed: all of your events will need to be resubscribed too
 })
 ```

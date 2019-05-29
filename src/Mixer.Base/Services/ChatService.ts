@@ -1,30 +1,29 @@
-import { requestAPI, RequestOptions } from '../Util/RequestHandler'
+import { RequestOptions } from '../Util/RequestHandler'
 import { EventEmitter } from 'events'
 import WebSocket = require('ws')
+import { Client } from '../Clients/Client'
 
 class ChatService extends EventEmitter {
 	private userid: number
-	private accessToken: string
 
 	private autoReconnect = new Map<number, boolean>()
 	private socket = new Map<number, any>()
 	private listener = new Map<number, any>()
 
-	private clientid: string
+	private client: Client
 
-	constructor (clientid: string) {
+	constructor (client: Client) {
 		super()
-		this.clientid = clientid
+		this.client = client
 	}
 
-	public join (userid: number, channelid: number, accessToken: string, autoReconnect?: boolean) {
+	public join (userid: number, channelid: number, autoReconnect?: boolean) {
 		if (this.socket.get(channelid)) this.close(channelid)
 
 		this.userid = userid
-		this.accessToken = accessToken
 		this.autoReconnect.set(channelid, autoReconnect || false)
 
-		this.getChat(channelid, accessToken)
+		this.getChat(channelid)
 			.then((response: ChatResponse) => {
 				this.connect(channelid, userid, response.endpoints[0], response.authkey)
 			})
@@ -33,17 +32,15 @@ class ChatService extends EventEmitter {
 			})
 	}
 
-	private getChat (channelid: number, accessToken: string) {
+	private getChat (channelid: number) {
 		return new Promise((resolve, reject) => {
 			var opts: RequestOptions = {
 				method: 'GET',
 				uri: 'https://mixer.com/api/v1/chats/' + channelid,
-				headers: {
-					Authorization: 'Bearer ' + accessToken
-				}
+				auth: true
 			}
 
-			requestAPI(opts).then(resolve).catch(reject)
+			this.client.request(opts).then(resolve).catch(reject)
 		})
 	}
 
@@ -115,9 +112,9 @@ class ChatService extends EventEmitter {
 		else id = channelid
 
 		if (id) {
-			if (this.userid && this.accessToken) {
+			if (this.userid) {
 				this.close(id)
-				this.join(this.userid, id, this.accessToken)
+				this.join(this.userid, id)
 			} else {
 				this.emit('error', 'You must join a channel first using the join() method', null)
 			}

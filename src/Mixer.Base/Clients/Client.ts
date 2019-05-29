@@ -13,7 +13,7 @@ export class Client {
 		this.client = client
 		this.user = user
 		this.constellationService = new ConstellationService(client.clientid)
-		this.chatService = new ChatService(client.clientid)
+		this.chatService = new ChatService(this)
 	}
 
 	public getClient (): ClientType {
@@ -79,14 +79,13 @@ export class Client {
 			channelid = this.user.channelid
 			userid = this.user.userid
 			reconnect = typeof channelidOrReconnect === 'boolean' ? channelidOrReconnect : false
-			if (this.user)
-				this.chatService.join(this.user.userid, this.user.channelid, this.client.tokens.access, channelidOrReconnect)
+			if (this.user) this.chatService.join(this.user.userid, this.user.channelid, channelidOrReconnect)
 		} else if (!this.client.tokens || !channelid || !userid)
 			return new Error(
 				"Can't join the chat, please make sure you provide all the proper parameters, or make sure user is defined when you create a client, also make sure that you defined tokens to use to be able to join the chat authenticated"
 			)
 
-		this.chatService.join(userid, channelid, this.client.tokens.access, reconnect)
+		this.chatService.join(userid, channelid, reconnect)
 	}
 
 	public request (options: RequestOptions): Promise<{ [key: string]: any }> {
