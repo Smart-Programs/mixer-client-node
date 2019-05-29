@@ -1,0 +1,30 @@
+{
+	"name": "mixer-client-node",
+	"version": "2.1.4",
+	"description": "A node client for connecting to mixer and the mixer services",
+	"main": "lib/index.js",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/Smart-Programs/mixer-client-node"
+	},
+	"bugs": {
+		"url": "https://github.com/Smart-Programs/mixer-client-node/issues"
+	},
+	"scripts": {
+		"build": "rimraf lib && tsc --declaration",
+		"prepublish": "npm run build"
+	},
+	"keywords": [ "mixer", "client", "api", "node", "constellation" ],
+	"author": "Garret (itsUnsmart)",
+	"license": "ISC",
+	"dependencies": {
+		"request": "^2.88.0",
+		"request-promise": "^4.2.4",
+		"ws": "^6.2.1"
+	},
+	"devDependencies": {
+		"@types/node": "^11.13.7",
+		"@types/request-promise": "^4.1.42",
+		"rimraf": "^2.6.3"
+	}
+}
