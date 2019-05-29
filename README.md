@@ -4,6 +4,7 @@
 [![downloads monthly](https://img.shields.io/npm/dm/mixer-client-node.svg)](https://www.npmjs.com/package/mixer-client-node)
 
 This is a client library for [Mixer](https://mixer.com/) written in Node.js.
+If you ever need any support on using the client be sure to join the [Discord](https://discord.gg/58RTAez)!
 
 ## Installation
 ```
