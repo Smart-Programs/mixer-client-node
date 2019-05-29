@@ -10,8 +10,11 @@ class ChatService extends EventEmitter {
 	private socket = new Map<number, any>()
 	private listener = new Map<number, any>()
 
-	constructor () {
+	private clientid: string
+
+	constructor (clientid: string) {
 		super()
+		this.clientid = clientid
 	}
 
 	public join (userid: number, channelid: number, accessToken: string, autoReconnect?: boolean) {
@@ -37,8 +40,7 @@ class ChatService extends EventEmitter {
 				uri: 'https://mixer.com/api/v1/chats/' + channelid,
 				headers: {
 					Authorization: 'Bearer ' + accessToken
-				},
-				json: true
+				}
 			}
 
 			requestAPI(opts).then(resolve).catch(reject)
@@ -78,10 +80,6 @@ class ChatService extends EventEmitter {
 			if (this.autoReconnect.get(channelid)) this.reconnect(channelid)
 			else this.emit('closed', channelid)
 		})
-	}
-
-	private unhookEventListeners (channelid: number) {
-		this.listener.set(channelid, false)
 	}
 
 	private sendPacket (method: string, args: Array<any>, channelid: number) {
@@ -135,7 +133,7 @@ class ChatService extends EventEmitter {
 		else id = channelid
 
 		if (id && this.socket.get(id)) {
-			this.unhookEventListeners(id)
+			this.listener.set(id, false)
 			this.socket.get(id).terminate()
 
 			this.autoReconnect.delete(id)

@@ -12,22 +12,19 @@ class ConstellationService extends EventEmitter {
 	}
 
 	public subscribe (event: string | Array<string>) {
-		if (typeof event === 'object') {
-			event.forEach((eventName) => {
-				if (this.socket.get(eventName)) this.unsubscribe(eventName)
-				this.connect(eventName)
-			})
-		} else {
-			if (this.socket.get(event)) this.unsubscribe(event)
-			this.connect(event)
-		}
+		event = typeof event === 'string' ? [ event ] : event
+
+		event.forEach((eventName) => {
+			if (this.socket.get(eventName)) this.unsubscribe(eventName)
+			this.connect(eventName)
+		})
 	}
 
 	private connect (event: string) {
 		let socket = new WebSocket(this.CONSTELLATION_URL)
 		this.socket.set(event, socket)
 		this.socket.get(event).on('open', () => {
-			this.emit('subscribe', 'Subscribing to event: ' + event)
+			this.emit('subscribe', 'Subscribing to an event', event)
 			this.sendPacket('livesubscribe', { events: [ event ] }, event)
 			this.eventListener(event)
 		})
@@ -69,36 +66,18 @@ class ConstellationService extends EventEmitter {
 		}
 	}
 
-	public unsubscribe (event?: string | Array<string>) {
-		if (typeof event === 'object') {
-			event.forEach((eventName) => {
-				if (this.socket.get(eventName)) {
-					this.sendPacket('liveunsubscribe', { events: [ eventName ] }, eventName)
+	public unsubscribe (event: string | Array<string>) {
+		event = typeof event === 'string' ? [ event ] : event
+		event.forEach((eventName) => {
+			if (this.socket.get(eventName)) {
+				this.sendPacket('liveunsubscribe', { events: [ eventName ] }, eventName)
 
-					this.socket.get(eventName).terminate()
-					this.socket.delete(eventName)
-				}
-			})
-		} else {
-			let id: string
-			if (this.socket.size === 1) id = this.socket.keys().next().value
-			else if (this.socket.size === 0)
-				this.emit('error', 'You must subscribe to an event first using the subscribe() method', null)
-			else id = event
-
-			if (id && this.socket.get(id)) {
-				this.sendPacket('liveunsubscribe', { events: [ event ] }, event)
-
-				this.socket.get(id).terminate()
-				this.socket.delete(id)
+				this.socket.get(eventName).terminate()
+				this.socket.delete(eventName)
 			} else {
-				this.emit(
-					'error',
-					'You must provide an event to unsubscribe connection to when subscribed to more than one event',
-					null
-				)
+				this.emit('error', "Can't unsubscribe to an event you aren't subscribed to.", eventName)
 			}
-		}
+		})
 	}
 }
 

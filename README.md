@@ -26,10 +26,8 @@ let client = new Mixer({
 	clientid:  'xxxxxxxx',
 	secretid?:  'xxxxxxxx'
 },{
-	user: {
-		userid: 755643,
-		channelid: 529479
-	} // If user is defined it needs both userid and channelid to work properly
+	userid: 755643,
+	channelid: 529479
 });
 
 //Option 2: (Only required variables)

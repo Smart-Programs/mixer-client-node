@@ -6,13 +6,14 @@ import ConstellationService from '../Services/ConstellationService'
 export class Client {
 	private client: ClientType
 	private user: User
-	public chatService = new ChatService()
+	public chatService: ChatService
 	public constellationService: ConstellationService
 
 	constructor (client: ClientType, user?: User) {
 		this.client = client
 		this.user = user
 		this.constellationService = new ConstellationService(client.clientid)
+		this.chatService = new ChatService(client.clientid)
 	}
 
 	public getClient (): ClientType {
@@ -27,22 +28,21 @@ export class Client {
 		return this.client.tokens.refresh
 	}
 
+	public getTokens (): AuthTokens {
+		return this.client.tokens
+	}
+
+	public setTokens (tokens: AuthTokens): AuthTokens {
+		this.client.tokens = tokens
+		return this.getTokens()
+	}
+
 	public expires (): number {
 		return this.client.tokens.expires
 	}
 
-	public setTokens (tokens: AuthTokens) {
-		this.client.tokens = tokens
-	}
-
 	public refresh (): Promise<{}> {
-		if (this.refreshToken()) return refreshAuth(this)
-		else
-			return Promise.reject({
-				statusCode: 404,
-				error: 'No refresh token available',
-				message: 'No refresh token available'
-			})
+		return refreshAuth(this)
 	}
 
 	public introspect (token: string): Promise<{}> {
@@ -54,39 +54,51 @@ export class Client {
 	public joinChat (channelid: number)
 	public joinChat (channelid: number, userid: number)
 	public joinChat (channelid: number, autoReconnect: boolean)
-	public joinChat (channelid: number, userid: number, autoReconnect?: boolean)
+	public joinChat (channelid: number, userid: number, autoReconnect: boolean)
 	public joinChat (
-		channelUserorReconnect?: number | boolean,
+		channelidOrReconnect?: number | boolean,
 		useridOrReconnect?: number | boolean,
 		autoReconnect?: boolean
 	) {
-		if (typeof channelUserorReconnect === 'number') {
-			if (typeof useridOrReconnect === 'number') {
-				this.chatService.join(useridOrReconnect, channelUserorReconnect, this.client.tokens.access, autoReconnect)
-			} else {
-				if (this.user) {
-					this.chatService.join(
-						this.user.user.userid,
-						channelUserorReconnect,
-						this.client.tokens.access,
-						useridOrReconnect
-					)
-				}
-			}
-		} else {
-			if (this.user) {
-				this.chatService.join(
-					this.user.user.userid,
-					this.user.user.channelid,
-					this.client.tokens.access,
-					channelUserorReconnect
-				)
-			}
-		}
+		let channelid: number
+		let userid: number
+		let reconnect: boolean
+
+		if (typeof channelidOrReconnect === 'number') {
+			channelid = channelidOrReconnect
+			typeof useridOrReconnect !== 'number'
+				? () => {
+						userid = this.user.userid
+						reconnect = autoReconnect || false
+					}
+				: () => {
+						userid = useridOrReconnect
+						reconnect = autoReconnect || false
+					}
+		} else if (this.user) {
+			channelid = this.user.channelid
+			userid = this.user.userid
+			reconnect = typeof channelidOrReconnect === 'boolean' ? channelidOrReconnect : false
+			if (this.user)
+				this.chatService.join(this.user.userid, this.user.channelid, this.client.tokens.access, channelidOrReconnect)
+		} else if (!this.client.tokens || !channelid || !userid)
+			return new Error(
+				"Can't join the chat, please make sure you provide all the proper parameters, or make sure user is defined when you create a client, also make sure that you defined tokens to use to be able to join the chat authenticated"
+			)
+
+		this.chatService.join(userid, channelid, this.client.tokens.access, reconnect)
 	}
 
-	public request (options: RequestOptions) {
-		requestAPI(options)
+	public request (options: RequestOptions): Promise<{ [key: string]: any }> {
+		options.headers = options.headers || {}
+		Object.assign(options.headers, {
+			'User-Agent': "Unsmart's Mixer-Client-Node",
+			'Client-ID': this.client.clientid
+		})
+		if (options.auth) Object.assign(options.headers, { Authorization: 'Bearer ' + this.client.tokens.access })
+		options.json = true
+
+		return requestAPI(options)
 	}
 }
 
@@ -97,8 +109,6 @@ export interface ClientType {
 }
 
 export interface User {
-	user: {
-		userid: number
-		channelid: number
-	}
+	userid: number
+	channelid: number
 }

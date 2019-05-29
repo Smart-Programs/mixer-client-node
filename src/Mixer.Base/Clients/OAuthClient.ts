@@ -1,4 +1,4 @@
-import { RequestOptions, requestAPI } from '../Util/RequestHandler'
+import { RequestOptions } from '../Util/RequestHandler'
 import { Client } from './Client'
 
 const OAUTH_BASE_URL = 'https://mixer.com/api/v1/oauth'
@@ -11,24 +11,29 @@ export interface AuthTokens {
 
 export function refreshAuth (client: Client) {
 	return new Promise((resolve, reject) => {
+		if (!client.getClient().tokens.refresh) {
+			return reject({
+				statusCode: 400,
+				error: 'Invalid Request',
+				message: 'No refresh token available'
+			})
+		}
 		let body: RefreshAuthBody = {
 			grant_type: 'refresh_token',
 			refresh_token: client.getClient().tokens.refresh,
 			client_id: client.getClient().clientid
 		}
 
-		if (client.getClient().secretid) {
-			body.client_secret = client.getClient().secretid
-		}
+		if (client.getClient().secretid) body.client_secret = client.getClient().secretid
 
 		let options: RequestOptions = {
 			method: 'POST',
 			uri: OAUTH_BASE_URL + '/token',
-			body,
-			json: true
+			body
 		}
 
-		requestAPI(options)
+		client
+			.request(options)
 			.then((response: RefreshAuthResponse) => {
 				client.setTokens({
 					access: response.access_token,
@@ -43,19 +48,6 @@ export function refreshAuth (client: Client) {
 	})
 }
 
-interface RefreshAuthBody {
-	grant_type: string
-	refresh_token: string
-	client_id: string
-	client_secret?: string
-}
-
-interface RefreshAuthResponse {
-	access_token: string
-	refresh_token: string
-	expires_in: number
-}
-
 export function validateToken (client: Client, token: string) {
 	return new Promise((resolve, reject) => {
 		var options: RequestOptions = {
@@ -63,11 +55,11 @@ export function validateToken (client: Client, token: string) {
 			uri: OAUTH_BASE_URL + '/token/introspect',
 			body: {
 				token
-			},
-			json: true
+			}
 		}
 
-		requestAPI(options)
+		client
+			.request(options)
 			.then((response: ValidateTokenResponse) => {
 				if (response.active) {
 					if (response.token_type === 'access_token') {
@@ -93,4 +85,17 @@ interface ValidateTokenResponse {
 	active: boolean
 	token_type?: string
 	exp?: number
+}
+
+interface RefreshAuthBody {
+	grant_type: string
+	refresh_token: string
+	client_id: string
+	client_secret?: string
+}
+
+interface RefreshAuthResponse {
+	access_token: string
+	refresh_token: string
+	expires_in: number
 }
