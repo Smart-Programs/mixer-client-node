@@ -11,7 +11,7 @@ export class Client {
 
 	constructor (client: ClientType) {
 		this.client = client
-		this.client.user = client.user
+		this.user = client.user
 	}
 
 	public get chatService (): ChatService {
@@ -87,10 +87,11 @@ export class Client {
 			channelid = this.user.channelid
 			userid = this.user.userid
 			reconnect = typeof channelidOrReconnect === 'boolean' ? channelidOrReconnect : false
-		} else if (!this.client.tokens || !channelid || !userid)
-			return new Error(
+		} else if (!this.client.tokens || !channelid || !userid) {
+			throw new Error(
 				"Can't join the chat, please make sure you provide all the proper parameters, or make sure user is defined when you create a client, also make sure that you defined tokens to use to be able to join the chat authenticated"
 			)
+		}
 
 		this.chatService.join(userid, channelid, reconnect)
 	}
