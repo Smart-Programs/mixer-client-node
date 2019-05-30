@@ -26,9 +26,17 @@ class ChatService extends EventEmitter {
 		this.getChat(channelid)
 			.then((response: ChatResponse) => {
 				if (!response.authkey) {
-					throw new Error('You must be authenticated to connect to a chat!')
+					this.emit(
+						'error',
+						{
+							error: 'Not Authenticated',
+							message: 'You must be authenticated to connect to a chat!'
+						},
+						channelid
+					)
+				} else {
+					this.connect(channelid, userid, response.endpoints[0], response.authkey)
 				}
-				this.connect(channelid, userid, response.endpoints[0], response.authkey)
 			})
 			.catch((error) => {
 				this.emit('error', error, channelid)

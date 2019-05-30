@@ -102,7 +102,8 @@ export class Client {
 			'User-Agent': "Unsmart's Mixer-Client-Node",
 			'Client-ID': this.client.clientid
 		})
-		if (options.auth) Object.assign(options.headers, { Authorization: 'Bearer ' + this.client.tokens.access })
+		if (options.auth && this.client.tokens)
+			Object.assign(options.headers, { Authorization: 'Bearer ' + this.client.tokens.access })
 		options.json = true
 
 		return requestAPI(options)

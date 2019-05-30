@@ -2,7 +2,6 @@ import { Client } from '../index'
 
 let client = new Client({
 	clientid: process.env.clientid,
-	secretid: process.env.secretid,
 	tokens: {
 		access: process.env.access
 	},

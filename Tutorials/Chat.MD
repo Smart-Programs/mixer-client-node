@@ -26,9 +26,9 @@ client.joinChat(3, 1) // Join channelid 3 with userid 1 (userid must be the owne
 
 // Now we are connected to 3 chats, the channelids being 1, 2, and 3
 
-client.chatService.on('join', (data) => {
-	console.log(`We are connecting to channel ${data.connectingTo}, with the user ${data.userConnecting}`)
-	// This is called 3 times for each channel we are connecting to
+client.chatService.on('joined', (data) => {
+	console.log(`We are connected to channel ${data.connectedTo}, with the user ${data.userConnected}`)
+	// This is called 3 times for each channel we are connected to
 })
 
 client.chatService.on('ChatMessage', (data, channelid) => {
@@ -36,13 +36,13 @@ client.chatService.on('ChatMessage', (data, channelid) => {
 	// channelid is the chat this message was sent in
 	// For our case this would either be channelid: 1, 2, or 3
 
-	if (data.message.message[0].toLowerCase() === '!ping')
+	if (data.message.message[0].text.toLowerCase() === '!ping')
 		client.chatService.sendMessage(`Pong! @${data.user_name}`, channelid) // Send a message back
-	// Sine we are connecting to 3 chats we must give the 2nd paramter of channelid so it knows which chat to send the message to
+	// Sine we are connecting to 3 chats we must give the 2nd parameter of channelid so it knows which chat to send the message to
 })
 
 client.chatService.on('closed', (channelid) => {
-	// Socket for channelid was closed (Not sent if auto reconnect set to true)
+	// Socket for channelid was closed (Not sent if auto reconnect set to true) Note: A joined event will be sent once you rejoin
 	// Also not sent if you force close the chat using client.chatService.close(channelid)
 })
 
