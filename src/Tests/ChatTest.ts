@@ -12,8 +12,8 @@ let client = new Client({
 	}
 })
 
-client.chatService.on('join', (data) => {
-	console.log(`We are connecting to channel ${data.connectingTo}, with the user ${data.userConnecting}`)
+client.chatService.on('joined', (data) => {
+	console.log(`We are connected to channel ${data.connectedTo}, with the user ${data.userConnected}`)
 })
 
 client.chatService.on('ChatMessage', (data, channelid) => {
@@ -21,6 +21,11 @@ client.chatService.on('ChatMessage', (data, channelid) => {
 
 	if (data.message.message[0].text.toLowerCase() === '!ping')
 		client.chatService.sendMessage(`Pong! @${data.user_name}`, channelid)
+})
+
+client.chatService.on('reply', (error, data, id) => {
+	if (error) console.error(error, id)
+	else console.log(data, id)
 })
 
 client.chatService.on('error', (error, id) => {
