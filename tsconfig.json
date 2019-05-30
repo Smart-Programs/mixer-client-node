@@ -10,7 +10,6 @@
       "**/*.ts"
     ],
     "exclude": [
-      "node_modules",
-      "Tests"
+      "node_modules"
     ]
   }

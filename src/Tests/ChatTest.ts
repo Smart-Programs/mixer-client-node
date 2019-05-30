@@ -1,4 +1,4 @@
-import { Client } from '../lib/index'
+import { Client } from '../index'
 
 let client = new Client({
 	clientid: 'xxxx',
