@@ -4,7 +4,7 @@ import WebSocket = require('ws')
 class ConstellationService extends EventEmitter {
 	private socket: any
 	private CONSTELLATION_URL: string
-	private events: Array<string>
+	private events: Array<string> = []
 
 	constructor (clientid) {
 		super()
@@ -28,7 +28,7 @@ class ConstellationService extends EventEmitter {
 			})
 		} else {
 			event = typeof event === 'string' ? [ event ] : event
-			event = event.filter((name) => this.events.indexOf(name) !== -1)
+			event = event.filter((name) => this.events.indexOf(name) === -1)
 			if (event.length > 0) {
 				this.connect(event)
 			} else {

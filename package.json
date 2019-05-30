@@ -1,6 +1,6 @@
 {
 	"name": "mixer-client-node",
-	"version": "2.1.10",
+	"version": "2.1.11",
 	"description": "A node client for connecting to mixer and the mixer services",
 	"main": "lib/index.js",
 	"repository": {
