@@ -10,6 +10,12 @@ If you ever need any support on using the client be sure to join the [Discord](h
 ```
 npm install --save mixer-client-node
 ```
+
+## Tutorials
+
+Need some help with tutorials you can find them [HERE](https://github.com/Smart-Programs/mixer-client-node/blob/master/Tutorials)
+I will be adding more to the tutorial list when I have the time! I want to make sure they are good tutorials and actually give you good info!
+
 ## Usage
 
 [Example on runkit](https://runkit.com/unsmart/mixer-client-node-example)
