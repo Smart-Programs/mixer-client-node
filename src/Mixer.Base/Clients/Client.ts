@@ -6,14 +6,22 @@ import ConstellationService from '../Services/ConstellationService'
 export class Client {
 	private client: ClientType
 	private user: User
-	public chatService: ChatService
-	public constellationService: ConstellationService
+	private chat: ChatService
+	private constellation: ConstellationService
 
-	constructor (client: ClientType, user?: User) {
+	constructor (client: ClientType) {
 		this.client = client
-		this.user = user
-		this.constellationService = new ConstellationService(client.clientid)
-		this.chatService = new ChatService(this)
+		this.client.user = client.user
+	}
+
+	public get chatService (): ChatService {
+		if (!this.chat) this.chat = new ChatService(this)
+		return this.chat
+	}
+
+	public get constellationService (): ConstellationService {
+		if (!this.constellation) this.constellation = new ConstellationService(this.client.clientid)
+		return this.constellation
 	}
 
 	public getClient (): ClientType {
@@ -79,7 +87,6 @@ export class Client {
 			channelid = this.user.channelid
 			userid = this.user.userid
 			reconnect = typeof channelidOrReconnect === 'boolean' ? channelidOrReconnect : false
-			if (this.user) this.chatService.join(this.user.userid, this.user.channelid, channelidOrReconnect)
 		} else if (!this.client.tokens || !channelid || !userid)
 			return new Error(
 				"Can't join the chat, please make sure you provide all the proper parameters, or make sure user is defined when you create a client, also make sure that you defined tokens to use to be able to join the chat authenticated"
@@ -105,6 +112,7 @@ export interface ClientType {
 	tokens?: AuthTokens
 	clientid: string
 	secretid?: string
+	user?: User
 }
 
 export interface User {

@@ -55,7 +55,7 @@ Anonymous chat joining is not supported and not planned currently.
 ```
 client.chatService.on('join', data => {
 	// data.connectingTo = channelid you are joining
-	// data.userConnection = user you are connecting as
+	// data.userConnecting = user you are connecting as
 });
 
 client.chatService.on('reply', (error, data, channelid) => {
