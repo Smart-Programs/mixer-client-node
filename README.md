@@ -18,7 +18,7 @@ I will be adding more to the tutorial list when I have the time! I want to make 
 
 ## Usage
 
-[Example on runkit](https://runkit.com/unsmart/mixer-client-node-example)
+Here you can find all the basic things that this client can handle for you. If you have any issues understanding any documentation or if you find something is not working as you believe it should either send an issue on the [Github Repo](https://github.com/Smart-Programs/mixer-client-node/issues/new) or join the [Discord](https://discord.gg/58RTAez) and ask for support in the dev-support channel.
 
 ### Client
 ```
