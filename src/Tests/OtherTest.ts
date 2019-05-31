@@ -1,19 +1,26 @@
 import { Client } from '../index'
 
 let client = new Client({
-	clientid: ''
+	clientid: process.env.clientid
 })
 
 let x = client.chatService
 
-x.join(755643, 529479)
+client.joinChat(529479, 755643)
 
 x.on('error', (error, id) => {
-	if (error.error === 'Not Authenticated') {
-		client.tokens = { access: process.env.access }
-		x.join(755643, id)
-	}
 	console.error(JSON.stringify(error))
+	if (error.code === 401) {
+		client.tokens = { access: process.env.access }
+		setTimeout(() => {
+			client.joinChat(id, 755643)
+		}, 500)
+	}
+})
+
+x.on('reply', (error, data, id) => {
+	if (error) console.error(error, data, id)
+	else console.log(data, id)
 })
 
 x.on('joined', console.log)

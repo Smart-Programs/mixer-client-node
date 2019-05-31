@@ -5,9 +5,9 @@ import ConstellationService from '../Services/ConstellationService'
 
 export class Client {
 	private client: ClientType
-	private user: User
-	private chat: ChatService
-	private constellation: ConstellationService
+	private _user: User
+	private _chatService: ChatService
+	private _constellationService: ConstellationService
 
 	constructor (client: ClientType) {
 		this.client = client
@@ -15,7 +15,7 @@ export class Client {
 	}
 
 	/*
-	 * Client Related Functions
+	 * Client/User Related Functions
 	 */
 
 	public get clientid (): string {
@@ -24,6 +24,14 @@ export class Client {
 
 	public get secretid (): string {
 		return this.client.secretid
+	}
+
+	public get user (): User {
+		return this._user
+	}
+
+	public set user (user: User) {
+		this._user = user
 	}
 
 	/*
@@ -53,6 +61,11 @@ export class Client {
 		else return undefined
 	}
 
+	public get didExpire (): boolean {
+		if (this.expires) return this.expires * 1000 >= Date.now()
+		else return true
+	}
+
 	public refresh (): Promise<{}> {
 		return refreshAuth(this)
 	}
@@ -66,12 +79,16 @@ export class Client {
 	 */
 
 	public get constellationService (): ConstellationService {
-		if (!this.constellation) this.constellation = new ConstellationService(this.client.clientid)
-		return this.constellation
+		if (!this._constellationService) this._constellationService = new ConstellationService(this.client.clientid)
+		return this._constellationService
 	}
 
 	public subscribeTo (event: string | Array<string>) {
 		this.constellationService.subscribe(event)
+	}
+
+	public unsubscribeTo (event: string | Array<string>) {
+		this.constellationService.unsubscribe(event)
 	}
 
 	/*
@@ -79,8 +96,8 @@ export class Client {
 	 */
 
 	public get chatService (): ChatService {
-		if (!this.chat) this.chat = new ChatService(this)
-		return this.chat
+		if (!this._chatService) this._chatService = new ChatService(this)
+		return this._chatService
 	}
 
 	public joinChat ()
@@ -100,26 +117,24 @@ export class Client {
 
 		if (typeof channelidOrReconnect === 'number') {
 			channelid = channelidOrReconnect
-			typeof useridOrReconnect !== 'number'
-				? () => {
-						userid = this.user.userid
-						reconnect = autoReconnect || false
-					}
-				: () => {
-						userid = useridOrReconnect
-						reconnect = autoReconnect || false
-					}
+			if (typeof useridOrReconnect === 'number') {
+				userid = useridOrReconnect
+				reconnect = autoReconnect || false
+			} else {
+				userid = this.user.userid
+				reconnect = autoReconnect || false
+			}
 		} else if (this.user) {
 			channelid = this.user.channelid
 			userid = this.user.userid
 			reconnect = typeof channelidOrReconnect === 'boolean' ? channelidOrReconnect : false
-		} else if (!this.client.tokens || !channelid || !userid) {
-			throw new Error(
-				"Can't join the chat, please make sure you provide all the proper parameters, or make sure user is defined when you create a client, also make sure that you defined tokens to use to be able to join the chat authenticated"
-			)
 		}
 
 		this.chatService.join(userid, channelid, reconnect)
+	}
+
+	public closeChat (channelid?: number) {
+		this.chatService.close(channelid)
 	}
 
 	/*

@@ -30,12 +30,13 @@ class ChatService extends EventEmitter {
 						'error',
 						{
 							error: 'Not Authenticated',
-							message: 'You must be authenticated to connect to a chat!'
+							message: 'You must be authenticated to connect to a chat!',
+							code: 401
 						},
 						channelid
 					)
 				} else {
-					this.connect(channelid, userid, response.endpoints[0], response.authkey)
+					this.connect(channelid, response.endpoints[0], response.authkey)
 				}
 			})
 			.catch((error) => {
@@ -64,24 +65,39 @@ class ChatService extends EventEmitter {
 		})
 	}
 
-	private connect (channelid: number, userid: number, endpoint: string, authkey: string) {
+	private connect (channelid: number, endpoint: string, authkey: string) {
 		let socket = new WebSocket(endpoint)
 		this.socket.set(channelid, socket)
+
 		this.socket.get(channelid).on('open', () => {
 			this.hookEventListeners(channelid)
-			this.sendPacket('auth', [ channelid, userid, authkey ], channelid)
+			this.sendPacket('auth', [ channelid, this.userid, authkey ], channelid)
 		})
 	}
 
 	private hookEventListeners (channelid: number) {
 		this.listener.set(channelid, true)
+
 		this.socket.get(channelid).on('message', (response) => {
 			if (!this.listener) return
 			response = JSON.parse(response)
 			if (response.type == 'reply') {
-				if (response.data && response.data.authenticated)
-					this.emit('joined', { connectedTo: channelid, userConnected: this.userid })
-				else this.emit(response.type, response.error, response.data, channelid)
+				if (response.data.authenticated === false) {
+					this.close(channelid)
+					this.emit(
+						'error',
+						{
+							error: 'Not Authenticated',
+							message: 'You must be authenticated to connect to a chat!',
+							code: 401
+						},
+						channelid
+					)
+				} else {
+					if (response.data && response.data.authenticated)
+						this.emit('joined', { connectedTo: channelid, userConnected: this.userid })
+					else this.emit(response.type, response.error, response.data, channelid)
+				}
 			} else {
 				this.emit(response.event, response.data, channelid)
 			}

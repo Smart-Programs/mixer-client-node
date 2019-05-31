@@ -1,6 +1,6 @@
 {
 	"name": "mixer-client-node",
-	"version": "2.2.0",
+	"version": "2.2.1",
 	"description": "A node client for connecting to mixer and the mixer services",
 	"main": "lib/index.js",
 	"repository": {
@@ -12,7 +12,10 @@
 	},
 	"scripts": {
 		"build": "rimraf lib && tsc --declaration",
-		"prepublish": "npm run build"
+		"prepublish": "npm run build",
+		"chat": "npm run build && node lib/Tests/ChatTest.js",
+		"constellation": "npm run build && node lib/Tests/ConstellationTest.js",
+		"other": "npm run build && node lib/Tests/OtherTest.js"
 	},
 	"keywords": [ "mixer", "client", "api", "node", "constellation" ],
 	"author": "Garret (itsUnsmart)",
