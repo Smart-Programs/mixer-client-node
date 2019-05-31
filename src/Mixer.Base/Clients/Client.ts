@@ -14,39 +14,43 @@ export class Client {
 		this.user = client.user
 	}
 
-	public get chatService (): ChatService {
-		if (!this.chat) this.chat = new ChatService(this)
-		return this.chat
+	/*
+	 * Client Related Functions
+	 */
+
+	public get clientid (): string {
+		return this.client.clientid
 	}
 
-	public get constellationService (): ConstellationService {
-		if (!this.constellation) this.constellation = new ConstellationService(this.client.clientid)
-		return this.constellation
+	public get secretid (): string {
+		return this.client.secretid
 	}
 
-	public getClient (): ClientType {
-		return this.client
+	/*
+	 * Authentication Related Functions
+	 */
+
+	public get accessToken (): string {
+		if (this.client.tokens) return this.client.tokens.access
+		else return undefined
 	}
 
-	public accessToken (): string {
-		return this.client.tokens.access
+	public get refreshToken (): string {
+		if (this.client.tokens) return this.client.tokens.refresh
+		else return undefined
 	}
 
-	public refreshToken (): string {
-		return this.client.tokens.refresh
-	}
-
-	public getTokens (): AuthTokens {
+	public get tokens (): AuthTokens {
 		return this.client.tokens
 	}
 
-	public setTokens (tokens: AuthTokens): AuthTokens {
+	public set tokens (tokens: AuthTokens) {
 		this.client.tokens = tokens
-		return this.getTokens()
 	}
 
-	public expires (): number {
-		return this.client.tokens.expires
+	public get expires (): number {
+		if (this.client.tokens) return this.client.tokens.expires
+		else return undefined
 	}
 
 	public refresh (): Promise<{}> {
@@ -55,6 +59,28 @@ export class Client {
 
 	public introspect (token: string): Promise<{}> {
 		return validateToken(this, token)
+	}
+
+	/*
+	 * Constellation Related Functions
+	 */
+
+	public get constellationService (): ConstellationService {
+		if (!this.constellation) this.constellation = new ConstellationService(this.client.clientid)
+		return this.constellation
+	}
+
+	public subscribeTo (event: string | Array<string>) {
+		this.constellationService.subscribe(event)
+	}
+
+	/*
+	 * Chat Related Functions
+	 */
+
+	public get chatService (): ChatService {
+		if (!this.chat) this.chat = new ChatService(this)
+		return this.chat
 	}
 
 	public joinChat ()
@@ -95,6 +121,10 @@ export class Client {
 
 		this.chatService.join(userid, channelid, reconnect)
 	}
+
+	/*
+	 * Misc Functions
+	 */
 
 	public request (options: RequestOptions): Promise<{ [key: string]: any }> {
 		options.headers = options.headers || {}

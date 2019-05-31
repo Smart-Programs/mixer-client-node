@@ -60,29 +60,31 @@ Anonymous chat joining is not supported and not planned currently.
 
 #### Chat Events
 ```
-client.chatService.on('joined', data => {
+let chat = client.chatService
+
+chat.on('joined', data => {
 	// data.connectedTo = channelid you are joining
 	// data.userConnected = user you are connecting as
 }); // This is only sent when you are authenticated to the chat
 
-client.chatService.on('reply', (error, data, channelid) => {
+chat.on('reply', (error, data, channelid) => {
 	if(error)  //Oh no error! (Sent by the server when a message sent to the server was rejected)
 	//data is the data from the reply
 	//channelid is the channelid you are connected to that the error happened on
 });
 
-client.chatService.on(EVENT_NAME*, (data, channelid) => {
+chat.on(EVENT_NAME*, (data, channelid) => {
 	//Do what you want with the response (this is the data object from the events response)
 });
 
-client.chatService.on('error', (error, channelid) => {
+chat.on('error', (error, channelid) => {
 	//channelid is the channelid you are connect/trying to connect to where an error happened
 	//error possibilities:
 	//an http error getting the info about the chat you want to connect to
 	//a socket error
 });
 
-client.chatService.on('warning', warning => {
+chat.on('warning', warning => {
 	// warning.code = warning code && warning.id = warning id
 	// Code: 1000 ID: 1 = Socket a packet was being sent to was closed
 	// or the socket did not exist (if you did the sendMessage method it most likely
@@ -105,7 +107,7 @@ client.chatService.on('warning', warning => {
 	// the channelid to close connection to if connected to multiple channels
 })
 
-client.chatService.on('closed', channelid => {
+chat.on('closed', channelid => {
 	//Socket for channelid was closed (Not sent if auto reconnect set to true)
 });
 ```
@@ -154,6 +156,7 @@ client.introspect("TOKEN_TO_CHECK").then(response =>{
 client.setTokens({
 	access:  'xxxxxxxx',
   refresh:  'xxxxxxxx' //refresh is optional
+	expires: 0000 // expires is optional
 })
 ```
 
@@ -165,7 +168,8 @@ let requestOptions = {
 	method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 	uri: "FULL_API_URL",
 	headers?: {},
-	body?: {}
+	body?: {},
+	auth?: true // Default: false
 };
 client.request(requestOptions).then(response => {
 	//Do something

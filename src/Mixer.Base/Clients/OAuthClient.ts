@@ -11,7 +11,7 @@ export interface AuthTokens {
 
 export function refreshAuth (client: Client) {
 	return new Promise((resolve, reject) => {
-		if (!client.getClient().tokens.refresh) {
+		if (!client.refreshToken) {
 			return reject({
 				statusCode: 400,
 				error: 'Invalid Request',
@@ -20,11 +20,11 @@ export function refreshAuth (client: Client) {
 		}
 		let body: RefreshAuthBody = {
 			grant_type: 'refresh_token',
-			refresh_token: client.getClient().tokens.refresh,
-			client_id: client.getClient().clientid
+			refresh_token: client.refreshToken,
+			client_id: client.clientid
 		}
 
-		if (client.getClient().secretid) body.client_secret = client.getClient().secretid
+		if (client.secretid) body.client_secret = client.secretid
 
 		let options: RequestOptions = {
 			method: 'POST',
@@ -35,11 +35,11 @@ export function refreshAuth (client: Client) {
 		client
 			.request(options)
 			.then((response: RefreshAuthResponse) => {
-				client.setTokens({
+				client.tokens = {
 					access: response.access_token,
 					refresh: response.refresh_token,
 					expires: (Date.now() + 1000 * response.expires_in) / 1000
-				})
+				}
 				resolve(response)
 			})
 			.catch((error) => {
@@ -63,11 +63,11 @@ export function validateToken (client: Client, token: string) {
 			.then((response: ValidateTokenResponse) => {
 				if (response.active) {
 					if (response.token_type === 'access_token') {
-						client.setTokens({
-							access: client.getClient().tokens.access,
-							refresh: client.getClient().tokens.refresh,
+						client.tokens = {
+							access: client.accessToken,
+							refresh: client.refreshToken,
 							expires: response.exp
-						})
+						}
 					}
 					resolve(response)
 				} else {

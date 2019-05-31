@@ -10,7 +10,7 @@ x.join(755643, 529479)
 
 x.on('error', (error, id) => {
 	if (error.error === 'Not Authenticated') {
-		client.setTokens({ access: process.env.access })
+		client.tokens = { access: process.env.access }
 		x.join(755643, id)
 	}
 	console.error(JSON.stringify(error))
