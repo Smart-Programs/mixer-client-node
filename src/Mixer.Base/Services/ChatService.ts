@@ -43,6 +43,15 @@ class ChatService extends EventEmitter {
 			})
 	}
 
+	public getChats (): Array<number> {
+		let array: Array<number> = []
+		this.socket.forEach((_, key) => {
+			array.push(key)
+		})
+
+		return array
+	}
+
 	private getChat (channelid: number) {
 		return new Promise((resolve, reject) => {
 			var opts: RequestOptions = {

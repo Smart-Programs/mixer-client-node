@@ -31,10 +31,11 @@ let client = new Mixer({
 		refresh?:  'xxxxxxxx'
 	},
 	clientid:  'xxxxxxxx',
-	secretid?:  'xxxxxxxx'
-},{
-	userid: 755643,
-	channelid: 529479
+	secretid?:  'xxxxxxxx',
+	user: {
+		userid: 755643,
+		channelid: 529479
+	}
 });
 
 //Option 2: (Only required variables)
@@ -142,7 +143,7 @@ client.introspect("TOKEN_TO_CHECK").then(response =>{
 	let refresh = new Date(client.expires() * 1000).valueOf() - Date.now();
 	setTimeout(() => {
 		client.refresh() //See the refresh tokens reference
-	}, )
+	}, refresh)
 }).catch(error =>{
 	console.error('Status code: ' + error.statusCode); //401 status sent when token is no longer active
 	console.error('Error: ' + error.error);
