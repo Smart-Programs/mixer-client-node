@@ -4,8 +4,6 @@ import WebSocket = require('ws')
 import { Client } from '../Clients/Client'
 
 class ChatService extends EventEmitter {
-	private userid: number
-
 	private autoReconnect = new Map<number, boolean>()
 	private socket = new Map<number, any>()
 	private listener = new Map<number, any>()
@@ -18,30 +16,40 @@ class ChatService extends EventEmitter {
 	}
 
 	public join (userid: number, channelid: number, autoReconnect?: boolean) {
-		if (this.socket.get(channelid)) this.close(channelid)
-
-		this.userid = userid
+		if (!this.client.user || userid !== this.client.user.userid) {
+			let id: number
+			if (this.client.user) id = this.client.user.channelid
+			this.client.user = {
+				userid,
+				channelid: id || channelid
+			}
+		}
 		this.autoReconnect.set(channelid, autoReconnect || false)
 
-		this.getChat(channelid)
-			.then((response: ChatResponse) => {
-				if (!response.authkey) {
-					this.emit(
-						'error',
-						{
-							error: 'Not Authenticated',
-							message: 'You must be authenticated to connect to a chat!',
-							code: 401
-						},
-						channelid
-					)
-				} else {
-					this.connect(channelid, response.endpoints[0], response.authkey)
-				}
-			})
-			.catch((error) => {
-				this.emit('error', error, channelid)
-			})
+		if (this.socket.get(channelid)) {
+			this.close(channelid, true)
+		} else {
+			this.getChat(channelid)
+				.then((response: ChatResponse) => {
+					if (!response.authkey) {
+						this.emit(
+							'error',
+							{
+								error: 'Not Authenticated',
+								message: 'You must be authenticated to connect to a chat!',
+								code: 401,
+								id: 1
+							},
+							channelid
+						)
+					} else {
+						this.connect(channelid, response.endpoints[0], response.authkey)
+					}
+				})
+				.catch((error) => {
+					this.emit('error', error, channelid)
+				})
+		}
 	}
 
 	public getChats (): Array<number> {
@@ -71,7 +79,7 @@ class ChatService extends EventEmitter {
 
 		this.socket.get(channelid).on('open', () => {
 			this.hookEventListeners(channelid)
-			this.sendPacket('auth', [ channelid, this.userid, authkey ], channelid)
+			this.sendPacket('auth', [ channelid, this.client.user.userid, authkey ], channelid)
 		})
 	}
 
@@ -83,19 +91,20 @@ class ChatService extends EventEmitter {
 			response = JSON.parse(response)
 			if (response.type == 'reply') {
 				if (response.data.authenticated === false) {
-					this.close(channelid)
+					this.close(channelid, false)
 					this.emit(
 						'error',
 						{
 							error: 'Not Authenticated',
 							message: 'You must be authenticated to connect to a chat!',
-							code: 401
+							code: 401,
+							id: 2
 						},
 						channelid
 					)
 				} else {
 					if (response.data && response.data.authenticated)
-						this.emit('joined', { connectedTo: channelid, userConnected: this.userid })
+						this.emit('joined', { connectedTo: channelid, userConnected: this.client.user.userid })
 					else this.emit(response.type, response.error, response.data, channelid)
 				}
 			} else {
@@ -109,8 +118,9 @@ class ChatService extends EventEmitter {
 		})
 
 		this.socket.get(channelid).on('close', () => {
-			if (!this.listener.get(channelid)) return
-			if (this.autoReconnect.get(channelid)) this.reconnect(channelid)
+			this.close(channelid, this.autoReconnect.get(channelid))
+
+			if (!this.listener.get(channelid) || this.autoReconnect.get(channelid)) return
 			else this.emit('closed', channelid)
 		})
 	}
@@ -150,32 +160,6 @@ class ChatService extends EventEmitter {
 		}
 	}
 
-	public reconnect (channelid?: number) {
-		let id: number
-		if (this.socket.size === 1) id = this.socket.keys().next().value
-		else id = channelid
-
-		if (id) {
-			if (this.userid) {
-				this.close(id, this.autoReconnect.get(id))
-			} else {
-				this.emit('warning', {
-					warning: 'Not Connected To A Channel',
-					reason: 'You MUST first connect to a channel before you can reconnect',
-					code: 1001,
-					id: 1
-				})
-			}
-		} else {
-			this.emit('warning', {
-				warning: 'ChannelID to Reconnect to Not Specified',
-				reason: 'You MUST provide a channelid to reconnect to when connected to multiple channels',
-				code: 1001,
-				id: 2
-			})
-		}
-	}
-
 	public close (channelid?: number, rejoin?: boolean) {
 		let id: number
 		if (this.socket.size === 1) id = this.socket.keys().next().value
@@ -189,13 +173,14 @@ class ChatService extends EventEmitter {
 		else id = channelid
 
 		if (id && this.socket.get(id)) {
+			let reconnectSetting = this.autoReconnect.get(id)
 			this.listener.set(id, false)
 			this.socket.get(id).terminate()
 
 			this.autoReconnect.delete(id)
 			this.listener.delete(id)
 			this.socket.delete(id)
-			if (rejoin) this.join(this.userid, id, true)
+			if (rejoin) this.join(this.client.user.userid, id, reconnectSetting)
 		} else {
 			this.emit('warning', {
 				warning: 'ChannelID to Close to Not Specified',

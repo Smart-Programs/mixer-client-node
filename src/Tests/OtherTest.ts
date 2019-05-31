@@ -23,4 +23,14 @@ x.on('reply', (error, data, id) => {
 	else console.log(data, id)
 })
 
-x.on('joined', console.log)
+let didReconnectAfterSuccess = false
+x.on('joined', (data) => {
+	console.log(data)
+	if (!didReconnectAfterSuccess) {
+		didReconnectAfterSuccess = true
+		setTimeout(() => {
+			client.closeChat(data.connectedTo)
+			client.joinChat()
+		}, 500)
+	}
+})

@@ -12,16 +12,12 @@ client.constellationService.on('event', (data, event) => {
 	console.log(JSON.stringify(data), event)
 })
 
-client.constellationService.on('error', (error) => {
-	console.error(error)
-})
+client.constellationService.on('error', console.error)
 
-client.constellationService.on('warning', (data) => {
-	console.warn(data)
-})
+client.constellationService.on('warning', console.warn)
 
-client.constellationService.subscribe('channel:529479:update')
-client.constellationService.subscribe([ 'channel:529479:update', 'channel:529479:followed' ])
+client.subscribeTo('channel:529479:update')
+client.subscribeTo([ 'channel:529479:update', 'channel:529479:followed' ])
 
 setTimeout(() => {
 	console.log('We are subscribed to ' + client.constellationService.getEvents().join(', '))

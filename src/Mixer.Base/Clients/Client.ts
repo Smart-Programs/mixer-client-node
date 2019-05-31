@@ -133,6 +133,14 @@ export class Client {
 		this.chatService.join(userid, channelid, reconnect)
 	}
 
+	public connectedChannels (): Array<number> {
+		return this.chatService.getChats()
+	}
+
+	public sendChat (message: string, channelid?: number) {
+		this.chatService.sendMessage(message, channelid)
+	}
+
 	public closeChat (channelid?: number) {
 		this.chatService.close(channelid)
 	}

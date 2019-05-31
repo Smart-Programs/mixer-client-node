@@ -4,59 +4,81 @@
 [![downloads monthly](https://img.shields.io/npm/dm/mixer-client-node.svg)](https://www.npmjs.com/package/mixer-client-node)
 
 This is a client library for [Mixer](https://mixer.com/) written in Node.js.
-If you ever need any support on using the client be sure to join the [Discord](https://discord.gg/58RTAez)!
+
+If you ever need any support on using the client be sure to join the [Discord](https://discord.gg/58RTAez) or post an issue on the [Github Repo](https://github.com/Smart-Programs/mixer-client-node/issues/new). Discord is highly recommended when asking for support as I check it more frequently.
 
 ## Installation
 ```
 npm install --save mixer-client-node
 ```
 
+Once github registry is open I will add a way to install it via github as well!
+
 ## Tutorials
 
-Need some help with tutorials you can find them [HERE](https://github.com/Smart-Programs/mixer-client-node/blob/master/Tutorials)
-I will be adding more to the tutorial list when I have the time! I want to make sure they are good tutorials and actually give you good info!
+Need some help with tutorials? You can find the tutorials I have made [HERE](https://github.com/Smart-Programs/mixer-client-node/blob/master/Tutorials). There is a limited amount of tutorials due to the fact that I want to make sure the tutorials are high quality and understandable. If you want to submit any tutorials to me you can reach out to me via Discord: Unsmart#0917 or via email: [me@unsmart.co](mailto:me@unsmart.co).
 
 ## Usage
 
-Here you can find all the basic things that this client can handle for you. If you have any issues understanding any documentation or if you find something is not working as you believe it should either send an issue on the [Github Repo](https://github.com/Smart-Programs/mixer-client-node/issues/new) or join the [Discord](https://discord.gg/58RTAez) and ask for support in the dev-support channel.
+Here you can find all the basic things that this client can handle for you and how to use the client. If you have any issues understanding any documentation or if you find something is not working as you believe it should either send an issue on the [Github Repo](https://github.com/Smart-Programs/mixer-client-node/issues/new) or join the [Discord](https://discord.gg/58RTAez) and ask for support in the dev-support channel.
 
 ### Client
 ```
 let Mixer = require('mixer-client-node').Client;
 
-//Option 1: (All possibilities for inputs)
+// (All possibilities for inputs): This is recommended when using the chat services
 let client = new Mixer({
-	tokens?:  {
+	tokens:  {
 		access:  'xxxxxxxx',
-		refresh?:  'xxxxxxxx'
+		refresh:  'xxxxxxxx'
 	},
 	clientid:  'xxxxxxxx',
-	secretid?:  'xxxxxxxx',
+	secretid:  'xxxxxxxx',
 	user: {
 		userid: 755643,
-		channelid: 529479
+		channelid: 529479 // See note*
 	}
 });
 
-//Option 2: (Only required variables)
+// (Only required variables): This is all you need if you are only using constellation
 let client = new Mixer({
 	clientid:  'xxxxxxxx'
 });
 ```
+*Note: The channelid you set in the user object does NOT have to be the owner of the tokens (the userid has to be) you can set the channelid to any channel you want, so if the userid is the bot account you can set the channelid to the streamers channelid. When joining chats this user object is highly recommended to be set but is not needed.
+
+If you have a secretid for your client you must set it in order to use the authorization features of this client.
+
+clientid must always be set as every service is required to know the clientid the requests are coming from to work.
+
+When using the chat features you must at least specify the access token and clientid at a minimum. It is recommended you specify the access and refresh (refresh tokens do not come with an implicit grant) tokens, client and secret ids, and the user object.
 
 ### Chat
 The following is a list of all the chat methods implemented.
 
 ####  Join a chat
 ```
-client.joinChat(CHANNELID_TO_JOIN, USERID_TO_JOIN, AUTO_RECONNECT); // userid MUST be the owner of the tokens set in constructor
-client.joinChat(CHANNELID_TO_JOIN, USERID_TO_JOIN);                // userid MUST be the owner of the tokens set in constructor
-client.joinChat(CHANNELID_TO_JOIN, AUTO_RECONNECT); // Must have set user in constructor
-client.joinChat(CHANNELID_TO_JOIN);                // Must have set user in constructor
-client.joinChat(AUTO_RECONNECT);                  // Must have set user in constructor
-client.joinChat();                               // Must have set user in constructor
+client.joinChat(CHANNELID_TO_JOIN, USERID_TO_JOIN_AS, AUTO_RECONNECT (true || false));
+client.joinChat(CHANNELID_TO_JOIN, USERID_TO_JOIN_AS);
+client.joinChat(CHANNELID_TO_JOIN, AUTO_RECONNECT);
+client.joinChat(CHANNELID_TO_JOIN);
+client.joinChat(AUTO_RECONNECT);
+client.joinChat();
 ```
+It is recommended that you set the user object when creating the client instance as it makes the join command much simpler. You can do just client.joinChat() instead of having to input the channelid to join, and the userid of the token owner. Also note: The channelid you set in the user object does NOT have to be the owner of the tokens (the userid has to be) you can set the channelid to any channel you want, so if the userid is the bot account you can set the channelid to the streamers channelid. [See client info](#client)
+
 Anonymous chat joining is not supported and not planned currently.
+
+#### Close connection to chat
+```
+client.closeChat(CHANNEL_ID); //CHANNEL_ID not needed if you are only connected to one chat
+//No 'closed' event will be emitted
+```
+
+#### Send a chat message
+```
+client.sendChat("Enter a message to send", CHANNEL_ID); //CHANNEL_ID not needed if you are only connected to one chat
+```
 
 #### Chat Events
 ```
@@ -113,17 +135,6 @@ chat.on('closed', channelid => {
 ```
 *[Event Names](https://dev.mixer.com/reference/chat/events)
 
-#### Send a chat message
-```
-client.chatService.sendMessage("Enter a message to send", CHANNEL_ID); //CHANNEL_ID not needed if you are only connected to one chat
-```
-
-#### Close connection to chat
-```
-client.chatService.close(CHANNEL_ID); //CHANNEL_ID not needed if you are only connected to one chat
-//No 'closed' event will be emitted
-```
-
 ### Authentication
 This client will handle refreshing tokens and checking  tokens via introspection for you.
 #### Refresh Tokens
@@ -153,11 +164,22 @@ client.introspect("TOKEN_TO_CHECK").then(response =>{
 ```
 #### Set Tokens
 ```
-client.setTokens({
+client.tokens = {
 	access:  'xxxxxxxx',
   refresh:  'xxxxxxxx' //refresh is optional
-	expires: 0000 // expires is optional
-})
+	expires: 0 // expires is optional (This should be the second timestamp which the token expires EX: (Date.now() + (1000 * 60 * 60 * 6)) / 1000 // If the token expires in 6 hours)
+}
+```
+Note when using the [refresh tokens](#refresh-tokens) part of this client the new tokens are automatically set including the new expire time. The expires time is also set if you use the [introspect](#introspect) part of the client with the access token as the checked token.
+#### Get Tokens
+```
+let tokens = client.tokens
+
+let accessToken = client.accessToken || client.tokens.access
+let refreshToken = client.refreshToken || client.tokens.refresh
+let expiresAt = client.expires || client.tokens.expires
+
+let didExpire = client.didExpire
 ```
 
 ### API Requests
@@ -165,11 +187,11 @@ Using the request module from the client automatically limits requests to the co
 #### Request
 ```
 let requestOptions = {
-	method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+	method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
 	uri: "FULL_API_URL",
 	headers?: {},
 	body?: {},
-	auth?: true // Default: false
+	auth?: true | false // Default: false
 };
 client.request(requestOptions).then(response => {
 	//Do something
@@ -181,7 +203,7 @@ client.request(requestOptions).then(response => {
 
 ### Constellation
 Need to connect to events using the mixer constellation, this client can handle that as well.
-*Note: This is currently a really early test version of my own constellation handler and may be buggy if you notice any bugs during development please submit an issue on the [GitHub Repo](https://github.com/Smart-Programs/mixer-client-node)
+*Note: This is currently an early test version of my own constellation handler, as I am new to the constellation service, it may be buggy and if you notice any bugs during development please submit an issue on the [GitHub Repo](https://github.com/Smart-Programs/mixer-client-node) or let me know in the dev-support channel on the [Discord](https://discord.gg/58RTAez).
 
 Some constellation features may change often and may include breaking changes, if anything ever breaks come back here as this will always be up to date.
 
