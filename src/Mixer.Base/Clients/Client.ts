@@ -100,12 +100,6 @@ export class Client {
 		return this._chatService
 	}
 
-	public joinChat ()
-	public joinChat (autoReconnect: boolean)
-	public joinChat (channelid: number)
-	public joinChat (channelid: number, userid: number)
-	public joinChat (channelid: number, autoReconnect: boolean)
-	public joinChat (channelid: number, userid: number, autoReconnect: boolean)
 	public joinChat (
 		channelidOrReconnect?: number | boolean,
 		useridOrReconnect?: number | boolean,
