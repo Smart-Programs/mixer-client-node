@@ -10,6 +10,9 @@ export class Client {
 	private _constellationService: ConstellationService
 
 	constructor (client: IClientType) {
+		if (!client.clientid) {
+			throw new Error('You must at a minimum provide the clientid in order to use this client')
+		}
 		this.client = client
 		this.user = client.user
 	}

@@ -24,9 +24,9 @@ class ChatService extends EventEmitter {
 				userid
 			}
 		}
-		this.autoReconnect.set(channelid, autoReconnect || false)
 
 		if (this.socket.get(channelid)) {
+			this.autoReconnect.set(channelid, autoReconnect || false)
 			this.close(channelid, true)
 		} else {
 			this.getChat(channelid)
@@ -43,6 +43,7 @@ class ChatService extends EventEmitter {
 							channelid
 						)
 					} else {
+						this.autoReconnect.set(channelid, autoReconnect || false)
 						this.connect(channelid, response.endpoints[0], response.authkey)
 					}
 				})
@@ -146,7 +147,23 @@ class ChatService extends EventEmitter {
 	public sendMessage (message: string, channelid?: number) {
 		const id = this.socket.size === 1 ? this.socket.keys().next().value : channelid
 		if (id) {
-			this.sendPacket('msg', [ message ], id)
+			if (message.length > 360) {
+				const messagesToSend: string[] = []
+				let isSeparated = false
+				while (!isSeparated) {
+					const part = message.substr(0, message.lastIndexOf(' ', 360))
+					messagesToSend.push(part)
+					if (part.length <= 360) {
+						isSeparated = true
+					}
+				}
+
+				messagesToSend.forEach((msg) => {
+					this.sendPacket('msg', [ msg.trim() ], id)
+				})
+			} else {
+				this.sendPacket('msg', [ message ], id)
+			}
 		} else {
 			this.emit('warning', {
 				code: 1000,
