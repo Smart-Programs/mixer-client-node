@@ -2,7 +2,7 @@ language: node_js
 node_js:
 - '10'
 before_install:
-- npm install -g typescript
+- npm i -g typescript
 deploy:
   provider: npm
   email: me@unsmart.co
