@@ -3,11 +3,10 @@ node_js:
 - '10'
 before_install:
 - npm install -g typescript
-before_deploy:
-- npm install
-- npm install -g typescript
 deploy:
   provider: npm
   email: me@unsmart.co
   api_key:
     secure: eXpAqGmHEMu5PyYtGJjdRLxrBPXlyYxE5YZlju2dZhhwJj09zqrojacNtwBYQQQ4991y1XFcd3MUFIwHxCTxXhyQYroScG9WAOYqXnx8bclCRxR5BFJvy//oXI1/FtoxJus4k2mzqK4HWbNr7vwjFIVGazuhjUeqNvzQInJRX8V2evGHe1XUrQl/gZUgGDeV18dwD2fgNDGiB+jBZZK7q6YPlnKVL0oQhEaDal/1pxbdlALkH+v9VDmU1Ft8+wCs5VRBC+ymNAyzF7X+4FP8uQfqGrU8yZ9XeXSPHDaMM48JC9dyvKv10KK+2ZOCzvXRF4s+4ZZXgZbuBjw7KPYAcCkkQ/QeMmi7N3IVMLe5v5PSGDYPhAYebVn2/TOGV7/v7yUDYNHFXlZvwjMde7+UWdYRBmxjyVvQEgpKEvHWWmF8hh7n87ZXM2Ba3h9Cb080/+xnZhhcC9LqObrt4dj8XPy6S/5D9z198w068SqJ5Hrc1HDj8h6JT0Jq/Zi8TdX/YLDvg0XCo+JA3ZlJ+DQXUYAkS2SpLMRq7MlO6qrirrz6gjl0x/5XuiFmF/RjTmRlmrh9r4jady5J98Jb+/qXREfdjvEGPA6mHydt2pOnYbjmNKCMcoyBvncptGr0lrjLAnZF8E8wPKyeLkL0A0E34BLJTrw/B+bOogsOrYiJcpM=
+  on:
+    branch: master

@@ -12,7 +12,6 @@
 	},
 	"scripts": {
 		"build": "rimraf lib && tsc --declaration",
-		"prepublish": "npm run build",
 		"chat": "npm run build && node lib/Tests/ChatTest.js",
 		"constellation": "npm run build && node lib/Tests/ConstellationTest.js",
 		"other": "npm run build && node lib/Tests/OtherTest.js",
