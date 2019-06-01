@@ -4,6 +4,7 @@
 [![downloads monthly](https://img.shields.io/npm/dm/mixer-client-node.svg)](https://www.npmjs.com/package/mixer-client-node)
 [![CodeFactor](https://www.codefactor.io/repository/github/smart-programs/mixer-client-node/badge/master)](https://www.codefactor.io/repository/github/smart-programs/mixer-client-node/overview/master)
 [![dependencies](https://david-dm.org/Smart-Programs/mixer-client-node.svg)](https://david-dm.org/Smart-Programs/mixer-client-node)
+[![Build Status](https://travis-ci.org/Smart-Programs/mixer-client-node.svg?branch=master)](https://travis-ci.org/Smart-Programs/mixer-client-node)
 
 This is a client library for [Mixer](https://mixer.com/) written in Node.js.
 
