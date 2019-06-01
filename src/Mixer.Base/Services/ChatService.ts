@@ -1,4 +1,4 @@
-import { RequestOptions } from '../Util/RequestHandler'
+import { IRequestOptions } from '../Util/RequestHandler'
 import { EventEmitter } from 'events'
 import WebSocket = require('ws')
 import { Client } from '../Clients/Client'
@@ -20,8 +20,8 @@ class ChatService extends EventEmitter {
 			let id: number
 			if (this.client.user) id = this.client.user.channelid
 			this.client.user = {
-				userid,
-				channelid: id || channelid
+				channelid: id || channelid,
+				userid
 			}
 		}
 		this.autoReconnect.set(channelid, autoReconnect || false)
@@ -30,15 +30,15 @@ class ChatService extends EventEmitter {
 			this.close(channelid, true)
 		} else {
 			this.getChat(channelid)
-				.then((response: ChatResponse) => {
+				.then((response: IChatResponse) => {
 					if (!response.authkey) {
 						this.emit(
 							'error',
 							{
-								error: 'Not Authenticated',
-								message: 'You must be authenticated to connect to a chat!',
 								code: 401,
-								id: 1
+								error: 'Not Authenticated',
+								id: 1,
+								message: 'You must be authenticated to connect to a chat!'
 							},
 							channelid
 						)
@@ -52,8 +52,8 @@ class ChatService extends EventEmitter {
 		}
 	}
 
-	public getChats (): Array<number> {
-		let array: Array<number> = []
+	public getChats (): number[] {
+		const array: number[] = []
 		this.socket.forEach((_, key) => {
 			array.push(key)
 		})
@@ -63,10 +63,10 @@ class ChatService extends EventEmitter {
 
 	private getChat (channelid: number) {
 		return new Promise((resolve, reject) => {
-			var opts: RequestOptions = {
+			const opts: IRequestOptions = {
+				auth: true,
 				method: 'GET',
-				uri: 'https://mixer.com/api/v1/chats/' + channelid,
-				auth: true
+				uri: 'https://mixer.com/api/v1/chats/' + channelid
 			}
 
 			this.client.request(opts).then(resolve).catch(reject)
@@ -74,8 +74,7 @@ class ChatService extends EventEmitter {
 	}
 
 	private connect (channelid: number, endpoint: string, authkey: string) {
-		let socket = new WebSocket(endpoint)
-		this.socket.set(channelid, socket)
+		this.socket.set(channelid, new WebSocket(endpoint))
 
 		this.socket.get(channelid).on('open', () => {
 			this.hookEventListeners(channelid)
@@ -89,16 +88,16 @@ class ChatService extends EventEmitter {
 		this.socket.get(channelid).on('message', (response) => {
 			if (!this.listener) return
 			response = JSON.parse(response)
-			if (response.type == 'reply') {
+			if (response.type === 'reply') {
 				if (response.data.authenticated === false) {
 					this.close(channelid, false)
 					this.emit(
 						'error',
 						{
-							error: 'Not Authenticated',
-							message: 'You must be authenticated to connect to a chat!',
 							code: 401,
-							id: 2
+							error: 'Not Authenticated',
+							id: 2,
+							message: 'You must be authenticated to connect to a chat!'
 						},
 						channelid
 					)
@@ -125,37 +124,35 @@ class ChatService extends EventEmitter {
 		})
 	}
 
-	private sendPacket (method: string, args: Array<any>, channelid: number) {
-		let packet: Packet = {
-			type: 'method',
+	private sendPacket (method: string, args: any[], channelid: number) {
+		const packet: IPacket = {
+			arguments: args,
 			method,
-			arguments: args
+			type: 'method'
 		}
 		if (this.socket.get(channelid) && this.socket.get(channelid).readyState === 1) {
 			this.socket.get(channelid).send(JSON.stringify(packet))
 		} else {
 			this.emit('warning', {
-				warning: "Can't Send Packet",
-				reason: 'Socket Closed or No Socket Found',
 				channelid,
 				code: 1000,
-				id: 1
+				id: 1,
+				reason: 'Socket Closed or No Socket Found',
+				warning: "Can't Send Packet"
 			})
 		}
 	}
 
 	public sendMessage (message: string, channelid?: number) {
-		let id: number
-		if (this.socket.size === 1) id = this.socket.keys().next().value
-		else id = channelid
+		const id = this.socket.size === 1 ? this.socket.keys().next().value : channelid
 		if (id) {
 			this.sendPacket('msg', [ message ], id)
 		} else {
 			this.emit('warning', {
-				warning: "Can't Send Packet",
-				reason: 'No ChannelID Specified, you MUST specify this when connected to more than one chat',
 				code: 1000,
-				id: 2
+				id: 2,
+				reason: 'No ChannelID Specified, you MUST specify this when connected to more than one chat',
+				warning: "Can't Send Packet"
 			})
 		}
 	}
@@ -165,15 +162,15 @@ class ChatService extends EventEmitter {
 		if (this.socket.size === 1) id = this.socket.keys().next().value
 		else if (this.socket.size === 0)
 			this.emit('warning', {
-				warning: 'Not Connected To A Channel',
-				reason: 'You MUST first connect to a channel before you can close a connection',
 				code: 1002,
-				id: 1
+				id: 1,
+				reason: 'You MUST first connect to a channel before you can close a connection',
+				warning: 'Not Connected To A Channel'
 			})
 		else id = channelid
 
 		if (id && this.socket.get(id)) {
-			let reconnectSetting = this.autoReconnect.get(id)
+			const reconnectSetting = this.autoReconnect.get(id)
 			this.listener.set(id, false)
 			this.socket.get(id).terminate()
 
@@ -183,10 +180,10 @@ class ChatService extends EventEmitter {
 			if (rejoin) this.join(this.client.user.userid, id, reconnectSetting)
 		} else {
 			this.emit('warning', {
-				warning: 'ChannelID to Close to Not Specified',
-				reason: 'You MUST provide a channelid to close connection to when connected to multiple channels',
 				code: 1002,
-				id: 2
+				id: 2,
+				reason: 'You MUST provide a channelid to close connection to when connected to multiple channels',
+				warning: 'ChannelID to Close to Not Specified'
 			})
 		}
 	}
@@ -194,13 +191,13 @@ class ChatService extends EventEmitter {
 
 export default ChatService
 
-interface ChatResponse {
-	endpoints: Array<string>
+interface IChatResponse {
+	endpoints: string[]
 	authkey: string
 }
 
-interface Packet {
+interface IPacket {
 	type: string
 	method: string
-	arguments: Array<any>
+	arguments: any[]
 }

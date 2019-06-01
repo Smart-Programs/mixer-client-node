@@ -1,1 +1,1 @@
-export { Client } from './Mixer.Base/Clients/Client';
+export { Client } from './Mixer.Base/Clients/Client'

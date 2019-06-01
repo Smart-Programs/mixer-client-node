@@ -4,7 +4,7 @@ import WebSocket = require('ws')
 class ConstellationService extends EventEmitter {
 	private socket: any
 	private CONSTELLATION_URL: string
-	private events: Array<string> = []
+	private events: string[] = []
 
 	constructor (clientid) {
 		super()
@@ -17,11 +17,11 @@ class ConstellationService extends EventEmitter {
 		})
 	}
 
-	public getEvents (): Array<string> {
+	public getEvents (): string[] {
 		return [ ...this.events ]
 	}
 
-	public subscribe (event: string | Array<string>) {
+	public subscribe (event: string | string[]) {
 		if (this.socket.readyState !== 1) {
 			this.socket.on('open', () => {
 				this.subscribe(event)
@@ -33,17 +33,17 @@ class ConstellationService extends EventEmitter {
 				this.connect(event)
 			} else {
 				this.emit('warning', {
-					warning: "Can't Subscribe",
-					reason: 'You are already subscribed to the event(s) you said to subscribe to',
-					events: event,
 					code: 2001,
-					id: 1
+					events: event,
+					id: 1,
+					reason: 'You are already subscribed to the event(s) you said to subscribe to',
+					warning: "Can't Subscribe"
 				})
 			}
 		}
 	}
 
-	private connect (event: Array<string>) {
+	private connect (event: string[]) {
 		this.emit('subscribe', { events: event })
 		this.sendPacket('livesubscribe', { events: event })
 		this.events = [ ...event, ...this.events ]
@@ -70,27 +70,27 @@ class ConstellationService extends EventEmitter {
 		})
 	}
 
-	private sendPacket (method: string, params: Params) {
-		let packet: Packet = {
-			type: 'method',
+	private sendPacket (method: string, params: IParams) {
+		const packet: IPacket = {
 			method,
-			params
+			params,
+			type: 'method'
 		}
 		if (this.socket && this.socket.readyState === 1) {
 			this.socket.send(JSON.stringify(packet))
 		} else {
 			this.emit('warning', {
-				warning: "Can't Send Packet",
-				reason: 'Socket Closed or No Socket Found',
-				method,
-				events: params,
 				code: 2000,
-				id: 1
+				events: params,
+				id: 1,
+				method,
+				reason: 'Socket Closed or No Socket Found',
+				warning: "Can't Send Packet"
 			})
 		}
 	}
 
-	public unsubscribe (event: string | Array<string>) {
+	public unsubscribe (event: string | string[]) {
 		event = typeof event === 'string' ? [ event ] : event
 		event = event.filter((name) => this.events.indexOf(name) !== -1)
 
@@ -99,11 +99,11 @@ class ConstellationService extends EventEmitter {
 			this.events = this.events.filter((name) => event.indexOf(name) !== -1)
 		} else {
 			this.emit('warning', {
-				warning: "Can't Send Packet",
-				reason: 'You are not subscribed to any of the events you listed to unsubscribe to',
-				events: event,
 				code: 2000,
-				id: 2
+				events: event,
+				id: 2,
+				reason: 'You are not subscribed to any of the events you listed to unsubscribe to',
+				warning: "Can't Send Packet"
 			})
 		}
 	}
@@ -111,12 +111,12 @@ class ConstellationService extends EventEmitter {
 
 export default ConstellationService
 
-interface Packet {
+interface IPacket {
 	type: string
 	method: string
-	params: Params
+	params: IParams
 }
 
-interface Params {
-	events: Array<string>
+interface IParams {
+	events: string[]
 }

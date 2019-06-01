@@ -1,6 +1,6 @@
 import { Client } from '../index'
 
-let client = new Client({
+const client = new Client({
 	clientid: 'cdffa13a0b5535e44518c0076650cc12d0e464075f9194fb'
 })
 

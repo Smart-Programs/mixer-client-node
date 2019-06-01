@@ -1,15 +1,15 @@
-import { AuthTokens, refreshAuth, validateToken } from './OAuthClient'
-import { RequestOptions, requestAPI } from '../Util/RequestHandler'
+import { IAuthTokens, refreshAuth, validateToken } from './OAuthClient'
+import { IRequestOptions, requestAPI } from '../Util/RequestHandler'
 import ChatService from '../Services/ChatService'
 import ConstellationService from '../Services/ConstellationService'
 
 export class Client {
-	private client: ClientType
-	private _user: User
+	private client: IClientType
+	private _user: IUser
 	private _chatService: ChatService
 	private _constellationService: ConstellationService
 
-	constructor (client: ClientType) {
+	constructor (client: IClientType) {
 		this.client = client
 		this.user = client.user
 	}
@@ -26,11 +26,11 @@ export class Client {
 		return this.client.secretid
 	}
 
-	public get user (): User {
+	public get user (): IUser {
 		return this._user
 	}
 
-	public set user (user: User) {
+	public set user (user: IUser) {
 		this._user = user
 	}
 
@@ -48,11 +48,11 @@ export class Client {
 		else return undefined
 	}
 
-	public get tokens (): AuthTokens {
+	public get tokens (): IAuthTokens {
 		return this.client.tokens
 	}
 
-	public set tokens (tokens: AuthTokens) {
+	public set tokens (tokens: IAuthTokens) {
 		this.client.tokens = tokens
 	}
 
@@ -83,11 +83,11 @@ export class Client {
 		return this._constellationService
 	}
 
-	public subscribeTo (event: string | Array<string>) {
+	public subscribeTo (event: string | string[]) {
 		this.constellationService.subscribe(event)
 	}
 
-	public unsubscribeTo (event: string | Array<string>) {
+	public unsubscribeTo (event: string | string[]) {
 		this.constellationService.unsubscribe(event)
 	}
 
@@ -127,7 +127,7 @@ export class Client {
 		this.chatService.join(userid, channelid, reconnect)
 	}
 
-	public connectedChannels (): Array<number> {
+	public connectedChannels (): number[] {
 		return this.chatService.getChats()
 	}
 
@@ -143,11 +143,11 @@ export class Client {
 	 * Misc Functions
 	 */
 
-	public request (options: RequestOptions): Promise<{ [key: string]: any }> {
+	public request (options: IRequestOptions): Promise<{ [key: string]: any }> {
 		options.headers = options.headers || {}
 		Object.assign(options.headers, {
-			'User-Agent': "Unsmart's Mixer-Client-Node",
-			'Client-ID': this.client.clientid
+			'Client-ID': this.client.clientid,
+			'User-Agent': "Unsmart's Mixer-Client-Node"
 		})
 		if (options.auth && this.client.tokens)
 			Object.assign(options.headers, { Authorization: 'Bearer ' + this.client.tokens.access })
@@ -157,14 +157,14 @@ export class Client {
 	}
 }
 
-export interface ClientType {
-	tokens?: AuthTokens
+export interface IClientType {
+	tokens?: IAuthTokens
 	clientid: string
 	secretid?: string
-	user?: User
+	user?: IUser
 }
 
-export interface User {
+export interface IUser {
 	userid: number
 	channelid: number
 }

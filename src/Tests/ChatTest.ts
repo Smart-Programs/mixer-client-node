@@ -1,13 +1,13 @@
 import { Client } from '../index'
 
-let client = new Client({
+const client = new Client({
 	clientid: process.env.clientid,
 	tokens: {
 		access: process.env.access
 	},
 	user: {
-		userid: 755643,
-		channelid: 529479
+		channelid: 529479,
+		userid: 755643
 	}
 })
 

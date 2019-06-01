@@ -1,9 +1,9 @@
-import { RequestOptions } from '../Util/RequestHandler'
+import { IRequestOptions } from '../Util/RequestHandler'
 import { Client } from './Client'
 
 const OAUTH_BASE_URL = 'https://mixer.com/api/v1/oauth'
 
-export interface AuthTokens {
+export interface IAuthTokens {
 	access: string
 	refresh?: string
 	expires?: number
@@ -13,32 +13,32 @@ export function refreshAuth (client: Client) {
 	return new Promise((resolve, reject) => {
 		if (!client.refreshToken) {
 			return reject({
-				statusCode: 400,
 				error: 'Invalid Request',
-				message: 'No refresh token available'
+				message: 'No refresh token available',
+				statusCode: 400
 			})
 		}
-		let body: RefreshAuthBody = {
+		const body: IRefreshAuthBody = {
+			client_id: client.clientid,
 			grant_type: 'refresh_token',
-			refresh_token: client.refreshToken,
-			client_id: client.clientid
+			refresh_token: client.refreshToken
 		}
 
 		if (client.secretid) body.client_secret = client.secretid
 
-		let options: RequestOptions = {
+		const options: IRequestOptions = {
+			body,
 			method: 'POST',
-			uri: OAUTH_BASE_URL + '/token',
-			body
+			uri: OAUTH_BASE_URL + '/token'
 		}
 
 		client
 			.request(options)
-			.then((response: RefreshAuthResponse) => {
+			.then((response: IRefreshAuthResponse) => {
 				client.tokens = {
 					access: response.access_token,
-					refresh: response.refresh_token,
-					expires: (Date.now() + 1000 * response.expires_in) / 1000
+					expires: (Date.now() + 1000 * response.expires_in) / 1000,
+					refresh: response.refresh_token
 				}
 				resolve(response)
 			})
@@ -50,30 +50,30 @@ export function refreshAuth (client: Client) {
 
 export function validateToken (client: Client, token: string) {
 	return new Promise((resolve, reject) => {
-		var options: RequestOptions = {
-			method: 'POST',
-			uri: OAUTH_BASE_URL + '/token/introspect',
+		const options: IRequestOptions = {
 			body: {
 				token
-			}
+			},
+			method: 'POST',
+			uri: OAUTH_BASE_URL + '/token/introspect'
 		}
 
 		client
 			.request(options)
-			.then((response: ValidateTokenResponse) => {
+			.then((response: IValidateTokenResponse) => {
 				if (response.active) {
 					if (response.token_type === 'access_token') {
 						client.tokens = {
 							access: client.accessToken,
-							refresh: client.refreshToken,
-							expires: response.exp
+							expires: response.exp,
+							refresh: client.refreshToken
 						}
 					}
 					resolve(response)
 				} else {
 					reject({
-						statusCode: 401,
-						error: 'Token is not active'
+						error: 'Token is not active',
+						statusCode: 401
 					})
 				}
 			})
@@ -81,20 +81,20 @@ export function validateToken (client: Client, token: string) {
 	})
 }
 
-interface ValidateTokenResponse {
+interface IValidateTokenResponse {
 	active: boolean
 	token_type?: string
 	exp?: number
 }
 
-interface RefreshAuthBody {
+interface IRefreshAuthBody {
 	grant_type: string
 	refresh_token: string
 	client_id: string
 	client_secret?: string
 }
 
-interface RefreshAuthResponse {
+interface IRefreshAuthResponse {
 	access_token: string
 	refresh_token: string
 	expires_in: number

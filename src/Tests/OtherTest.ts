@@ -1,10 +1,10 @@
 import { Client } from '../index'
 
-let client = new Client({
+const client = new Client({
 	clientid: process.env.clientid
 })
 
-let x = client.chatService
+const x = client.chatService
 
 client.joinChat(529479, 755643)
 
