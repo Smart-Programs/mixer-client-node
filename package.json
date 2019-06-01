@@ -16,7 +16,7 @@
 		"chat": "npm run build && node lib/Tests/ChatTest.js",
 		"constellation": "npm run build && node lib/Tests/ConstellationTest.js",
 		"other": "npm run build && node lib/Tests/OtherTest.js",
-		"test": "npm run chat"
+		"test": "npm run chat && npm run constellation && npm run other"
 	},
 	"keywords": [ "mixer", "client", "api", "node", "constellation" ],
 	"author": "Garret (itsUnsmart)",

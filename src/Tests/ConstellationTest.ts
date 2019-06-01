@@ -21,4 +21,9 @@ client.subscribeTo([ 'channel:529479:update', 'channel:529479:followed' ])
 
 setTimeout(() => {
 	console.log('We are subscribed to ' + client.constellationService.getEvents().join(', '))
+	if (client.constellationService.getEvents().length === 2) {
+		process.exit(0)
+	} else {
+		process.exit(1)
+	}
 }, 500)

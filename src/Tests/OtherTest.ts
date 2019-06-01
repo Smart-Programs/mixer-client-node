@@ -32,5 +32,7 @@ x.on('joined', (data) => {
 			client.closeChat(data.connectedTo)
 			client.joinChat()
 		}, 500)
+	} else {
+		process.exit(0)
 	}
 })
