@@ -3,6 +3,9 @@ node_js:
 - '10'
 before_install:
 - npm install -g typescript
+before_deploy:
+- npm install
+- npm install -g typescript
 deploy:
   provider: npm
   email: me@unsmart.co
