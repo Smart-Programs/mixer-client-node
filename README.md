@@ -79,6 +79,7 @@ client.closeChat(CHANNEL_ID); //CHANNEL_ID not needed if you are only connected 
 ```
 client.sendChat("Enter a message to send", CHANNEL_ID); //CHANNEL_ID not needed if you are only connected to one chat
 ```
+Note: The 360 character count limit is not handled by this client yet, please make sure to limit the character count until this is added
 
 #### Chat Events
 ```
@@ -133,7 +134,7 @@ chat.on('closed', channelid => {
 	//Socket for channelid was closed (Not sent if auto reconnect set to true)
 });
 ```
-*[Event Names](https://dev.mixer.com/reference/chat/events)
+*[Event Names](https://dev.mixer.com/reference/chat/events) The data sent is is the data object from the payload of each event, not the full payload object.
 
 ### Authentication
 This client will handle refreshing tokens and checking  tokens via introspection for you.
@@ -150,7 +151,7 @@ client.refresh().then(response =>{
 ```
 #### Introspect
 ```
-client.introspect("TOKEN_TO_CHECK").then(response =>{
+client.introspect(TOKEN_TO_CHECK).then(response => {
 	//The response object is the same response from mixer, the  expires field on  the tokens will be set to what is returned automatically
 	//For setting timeout on refresh you would do the following code:
 	let refresh = new Date(client.expires() * 1000).valueOf() - Date.now();
@@ -166,8 +167,8 @@ client.introspect("TOKEN_TO_CHECK").then(response =>{
 ```
 client.tokens = {
 	access:  'xxxxxxxx',
-  refresh:  'xxxxxxxx' //refresh is optional
-	expires: 0 // expires is optional (This should be the second timestamp which the token expires EX: (Date.now() + (1000 * 60 * 60 * 6)) / 1000 // If the token expires in 6 hours)
+	refresh:  'xxxxxxxx' //refresh is optional
+	expires: 0 // expires is optional (The second timestamp for when the token expires)
 }
 ```
 Note when using the [refresh tokens](#refresh-tokens) part of this client the new tokens are automatically set including the new expire time. The expires time is also set if you use the [introspect](#introspect) part of the client with the access token as the checked token.
@@ -202,7 +203,8 @@ client.request(requestOptions).then(response => {
 ```
 
 ### Constellation
-Need to connect to events using the mixer constellation, this client can handle that as well.
+Need to connect to events using the mixer constellation in order to get live updates to channels like follows, subs, or updated view counts, or features, etc? This client can handle that as well. You can see a full list of event [HERE](https://dev.mixer.com/reference/constellation/events/live) to subscribe to.
+
 *Note: This is currently an early test version of my own constellation handler, as I am new to the constellation service, it may be buggy and if you notice any bugs during development please submit an issue on the [GitHub Repo](https://github.com/Smart-Programs/mixer-client-node) or let me know in the dev-support channel on the [Discord](https://discord.gg/58RTAez).
 
 Some constellation features may change often and may include breaking changes, if anything ever breaks come back here as this will always be up to date.
@@ -226,8 +228,9 @@ client.constellationService.on('subscribe', (data) => {
 })
 
 client.constellationService.on('event', (data, event) => {
-	//Do stuff with data, this is the payload object from the event subscribed to
-	//Event is the event you subscribed to ex: 'channel:1:update'
+	// Do stuff with data, this is the payload object from the event subscribed to
+	// Event is the event you subscribed to ex: 'channel:1:update'
+	// See *Note
 })
 
 client.constellationService.on('reply', (data) => {
@@ -245,10 +248,11 @@ client.constellationService.on('warning', (data) => {
 })
 
 client.constellationService.on('error', (data) => {
-	//Data is the error returned from the socket
+	// Data is the error returned from the socket
 })
 
 client.constellationService.on('closed', () => {
-	//The subscription socket was closed: all of your events will need to be resubscribed too
+	// The subscription socket was closed: all of your events will need to be resubscribed too
 })
 ```
+*Note: The payload data for each constellation event can be found [HERE](https://dev.mixer.com/reference/constellation/events/live). This also shows the event argument to pass in the [subscribe](#subscribe) event.
