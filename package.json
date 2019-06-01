@@ -18,7 +18,13 @@
 		"other": "npm run build && node lib/Tests/OtherTest.js",
 		"test": "npm run chat && npm run constellation && npm run other"
 	},
-	"keywords": [ "mixer", "client", "api", "node", "constellation" ],
+	"keywords": [
+		"mixer",
+		"client",
+		"api",
+		"node",
+		"constellation"
+	],
 	"author": "Garret (itsUnsmart)",
 	"license": "ISC",
 	"dependencies": {
@@ -29,6 +35,7 @@
 	"devDependencies": {
 		"@types/node": "^11.13.13",
 		"@types/request-promise": "^4.1.44",
-		"rimraf": "^2.6.3"
+		"rimraf": "^2.6.3",
+		"tsc": "^1.20150623.0"
 	}
 }
