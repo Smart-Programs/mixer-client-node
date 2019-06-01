@@ -2,6 +2,7 @@
 
 [![npm version](https://img.shields.io/npm/v/mixer-client-node.svg)](https://www.npmjs.com/package/mixer-client-node)
 [![downloads monthly](https://img.shields.io/npm/dm/mixer-client-node.svg)](https://www.npmjs.com/package/mixer-client-node)
+[![dependencies](https://david-dm.org/Smart-Programs/mixer-client-node.svg)](https://www.npmjs.com/package/mixer-client-node)
 
 This is a client library for [Mixer](https://mixer.com/) written in Node.js.
 
