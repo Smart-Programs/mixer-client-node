@@ -1,10 +1,12 @@
 import { EventEmitter } from 'events'
 import WebSocket = require('ws')
+import { isRegExp } from 'util'
 
 class ConstellationService extends EventEmitter {
 	private socket: any
 	private CONSTELLATION_URL: string
 	private events: string[] = []
+	private mostRecent: string[] = []
 
 	constructor (clientid) {
 		super()
@@ -17,7 +19,7 @@ class ConstellationService extends EventEmitter {
 		})
 	}
 
-	public getEvents (): string[] {
+	public get subscribedEvents (): string[] {
 		return [ ...this.events ]
 	}
 
@@ -28,13 +30,16 @@ class ConstellationService extends EventEmitter {
 			})
 		} else {
 			event = typeof event === 'string' ? [ event ] : event
-			event = event.filter((name) => this.events.indexOf(name) === -1)
+			const originalEvents = event
+			event = event.filter((name) => this.events.indexOf(name) === -1 && this.mostRecent.indexOf(name) === -1)
+
 			if (event.length > 0) {
+				this.mostRecent = this.mostRecent ? [ ...this.mostRecent, ...event ] : event
 				this.connect(event)
 			} else {
 				this.emit('warning', {
 					code: 2001,
-					events: event,
+					events: originalEvents,
 					id: 1,
 					reason: 'You are already subscribed to the event(s) you said to subscribe to',
 					warning: "Can't Subscribe"
@@ -44,19 +49,35 @@ class ConstellationService extends EventEmitter {
 	}
 
 	private connect (event: string[]) {
-		this.emit('subscribe', { events: event })
-		this.sendPacket('livesubscribe', { events: event })
-		this.events = [ ...event, ...this.events ]
+		this.sendPacket('livesubscribe', { events: event }, 42)
 	}
 
 	private eventListener () {
 		this.socket.on('message', (data) => {
 			data = JSON.parse(data)
 			if (data.type === 'reply') {
-				this.emit(data.type, { result: data.result, error: data.error, data })
+				if (data.error && data.error.code === 4106) {
+					this.mostRecent = []
+					this.emit('error', {
+						code: 404,
+						id: 1,
+						message: data.error.message
+					})
+				} else {
+					if (data.id === 42) {
+						const oldRecent = this.mostRecent
+						this.mostRecent = []
+						this.events = [ ...this.events, ...oldRecent ]
+						this.emit('subscribe', { events: oldRecent })
+					} else {
+						this.emit(data.type, { result: data.result, error: data.error, data })
+					}
+				}
 			} else {
 				if (data.data.payload) {
 					this.emit(data.type, data.data.payload, data.data.channel)
+				} else {
+					this.emit(data.type, data)
 				}
 			}
 		})
@@ -70,8 +91,9 @@ class ConstellationService extends EventEmitter {
 		})
 	}
 
-	private sendPacket (method: string, params: IParams) {
+	private sendPacket (method: string, params: IParams, id?: number) {
 		const packet: IPacket = {
+			id: id || 0,
 			method,
 			params,
 			type: 'method'
@@ -112,6 +134,7 @@ class ConstellationService extends EventEmitter {
 export default ConstellationService
 
 interface IPacket {
+	id: number
 	type: string
 	method: string
 	params: IParams
