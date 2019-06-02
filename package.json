@@ -11,34 +11,25 @@
 		"url": "https://github.com/Smart-Programs/mixer-client-node/issues"
 	},
 	"scripts": {
-		"build": "npm run updater && rimraf lib && tsc --declaration",
-		"updater": "ncu -u && npm i",
+		"build": "npm i && rimraf lib && tsc --declaration",
 		"chat": "tsc && node lib/Tests/ChatTest.js",
 		"constellation": "tsc && node lib/Tests/ConstellationTest.js",
-		"test": "npm run updater && npm run chat && npm run constellation"
+		"test": "npm i && npm run chat && npm run constellation"
 	},
-	"keywords": [
-		"mixer",
-		"client",
-		"api",
-		"constellation",
-		"library",
-		"oauth",
-		"mixer"
-	],
+	"keywords": [ "mixer", "client", "api", "constellation", "library", "oauth", "mixer" ],
 	"author": "Garret (itsUnsmart)",
 	"license": "MIT",
 	"publishConfig": {
 		"access": "public"
 	},
 	"dependencies": {
-		"request": "^2.88.0",
-		"request-promise": "^4.2.4",
-		"ws": "^7.0.0"
+		"request": "latest",
+		"request-promise": "latest",
+		"ws": "latest"
 	},
 	"devDependencies": {
-		"@types/node": "^12.0.4",
-		"@types/request-promise": "^4.1.44",
-		"rimraf": "^2.6.3"
+		"@types/node": "latest",
+		"@types/request-promise": "latest",
+		"rimraf": "latest"
 	}
 }
