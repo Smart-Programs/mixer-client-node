@@ -4,6 +4,7 @@ const client = new Client({
 	clientid: 'cdffa13a0b5535e44518c0076650cc12d0e464075f9194fb'
 })
 
+console.log('Try to subscribe to an unknown event... expect a not found error')
 client.subscribeTo('channel:529479:fakeEvent') // should give us an error of not found event
 
 const constellation = client.constellationService
@@ -16,12 +17,14 @@ constellation.on('subscribe', (data) => {
 	} else {
 		if (constellation.subscribedEvents.length === 3) {
 			console.log('We successfully subscribed to all 3 events correctly...')
-			console.log(constellation.subscribedEvents.join(', '))
+			console.log(client.subscribedEvents.join(', '))
+
+			console.log('All test were completed successfully...')
 
 			process.exit(0)
 		} else {
 			console.error('We did not subscribe to all 3 events correctly...')
-			console.error(constellation.subscribedEvents.join(', '))
+			console.error(client.subscribedEvents.join(', '))
 
 			process.exit(1)
 		}

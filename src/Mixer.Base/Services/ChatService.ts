@@ -53,7 +53,7 @@ class ChatService extends EventEmitter {
 		}
 	}
 
-	public getChats (): number[] {
+	public get connectedChats (): number[] {
 		const array: number[] = []
 		this.socket.forEach((_, key) => {
 			array.push(key)
@@ -147,20 +147,24 @@ class ChatService extends EventEmitter {
 	public sendMessage (message: string, channelid?: number) {
 		const id = this.socket.size === 1 ? this.socket.keys().next().value : channelid
 		if (id) {
-			if (message.length > 360) {
-				const messagesToSend: string[] = []
-				let isSeparated = false
-				while (!isSeparated) {
+			if (message && message.length > 360) {
+				const getPart = () => {
 					const part = message.substr(0, message.lastIndexOf(' ', 360))
-					messagesToSend.push(part)
-					if (part.length <= 360) {
-						isSeparated = true
-					}
+					this.sendMessage(part, id)
+					message = message.replace(part, '')
+
+					setTimeout(() => {
+						if (message.length <= 360) {
+							if (message.trim().length !== 0) {
+								this.sendMessage(message, id)
+							}
+						} else {
+							getPart()
+						}
+					}, 100)
 				}
 
-				messagesToSend.forEach((msg) => {
-					this.sendPacket('msg', [ msg.trim() ], id)
-				})
+				getPart()
 			} else {
 				this.sendPacket('msg', [ message ], id)
 			}

@@ -94,6 +94,10 @@ export class Client {
 		this.constellationService.unsubscribe(event)
 	}
 
+	public get subscribedEvents (): string[] {
+		return this.constellationService.subscribedEvents
+	}
+
 	/*
 	 * Chat Related Functions
 	 */
@@ -130,8 +134,8 @@ export class Client {
 		this.chatService.join(userid, channelid, reconnect)
 	}
 
-	public connectedChannels (): number[] {
-		return this.chatService.getChats()
+	public get connectedChannels (): number[] {
+		return this.chatService.connectedChats
 	}
 
 	public sendChat (message: string, channelid?: number) {

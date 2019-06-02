@@ -1,6 +1,6 @@
 {
 	"name": "mixer-client-node",
-	"version": "2.3.0",
+	"version": "2.3.1",
 	"description": "A node client for connecting to mixer and the mixer services",
 	"main": "lib/index.js",
 	"repository": {
@@ -17,7 +17,15 @@
 		"constellation": "tsc && node lib/Tests/ConstellationTest.js",
 		"test": "npm run updater && npm run chat && npm run constellation"
 	},
-	"keywords": [ "mixer", "client", "api", "constellation", "library", "oauth", "mixer" ],
+	"keywords": [
+		"mixer",
+		"client",
+		"api",
+		"constellation",
+		"library",
+		"oauth",
+		"mixer"
+	],
 	"author": "Garret (itsUnsmart)",
 	"license": "MIT",
 	"publishConfig": {

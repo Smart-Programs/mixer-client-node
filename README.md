@@ -1,10 +1,13 @@
 # Mixer Client Node
 
-[![npm version](https://img.shields.io/npm/v/mixer-client-node.svg)](https://www.npmjs.com/package/mixer-client-node)
-[![downloads monthly](https://img.shields.io/npm/dm/mixer-client-node.svg)](https://www.npmjs.com/package/mixer-client-node)
-[![CodeFactor](https://www.codefactor.io/repository/github/smart-programs/mixer-client-node/badge/master)](https://www.codefactor.io/repository/github/smart-programs/mixer-client-node/overview/master)
-[![dependencies](https://david-dm.org/Smart-Programs/mixer-client-node.svg)](https://david-dm.org/Smart-Programs/mixer-client-node)
-[![Build Status](https://travis-ci.org/Smart-Programs/mixer-client-node.svg?branch=master)](https://travis-ci.org/Smart-Programs/mixer-client-node)
+[![version](https://img.shields.io/npm/v/mixer-client-node.svg?logo=npm&label=NPM&style=for-the-badge)](https://www.npmjs.com/package/mixer-client-node)
+[![downloads](https://img.shields.io/npm/dm/mixer-client-node.svg?logo=npm&label=Downloads&style=for-the-badge&color=blue)](https://www.npmjs.com/package/mixer-client-node)
+
+[![Travis](https://img.shields.io/travis/smart-programs/mixer-client-node.svg?logo=travis&label=Build&style=for-the-badge)](https://travis-ci.org/Smart-Programs/mixer-client-node)
+[![David](https://img.shields.io/david/smart-programs/mixer-client-node.svg?label=Dependencies&style=for-the-badge)](https://david-dm.org/Smart-Programs/mixer-client-node)
+
+
+[![Discord](https://img.shields.io/discord/492504918398074913.svg?logo=discord&label=Discord)](https://discord.gg/58RTAez)
 
 This is a client library for [Mixer](https://mixer.com/) written in Node.js.
 
@@ -82,7 +85,7 @@ client.closeChat(CHANNEL_ID); //CHANNEL_ID not needed if you are only connected 
 ```
 client.sendChat("Enter a message to send", CHANNEL_ID); //CHANNEL_ID not needed if you are only connected to one chat
 ```
-Note: The 360 character count limit is not handled by this client yet, please make sure to limit the character count until this is added
+Note: The 360 character count limit is handled by this client so put your full message in there without worrying about how long it is!
 
 #### Chat Events
 ```
@@ -216,18 +219,21 @@ Info on what each event returns may not be fully complete as I am still investig
 
 #### Subscribe
 ```
-client.constellationService.subscribe('Event:to:subscribe' || [ 'event:1:sub', 'event:2:sub' ])
+client.subscribeTo('Event:to:subscribe' || [ 'event:1:sub', 'event:2:sub' ])
 ```
 #### Unsubscribe
 ```
-client.constellationService.unsubscribe('Event:to:unsubscribe' || [ 'event:1:unsub', 'event:2:unsub' ])
+client.unsubscribeTo('Event:to:unsubscribe' || [ 'event:1:unsub', 'event:2:unsub' ])
+```
+#### Get Subscribed Events
+```
+let events = client.subscribedEvents // returns a string array of events
 ```
 #### Constellation Events
 ```
 client.constellationService.on('subscribe', (data) => {
 	// data.events = array of events you are newly subscribing too
-	// Note client.constellationService.getEvents() will return
-	// events you are subbed to
+	// you can get the full list with client.subscribedEvents - See this above
 })
 
 client.constellationService.on('event', (data, event) => {
