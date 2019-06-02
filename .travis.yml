@@ -3,6 +3,7 @@ node_js:
 - '10'
 before_install:
 - npm i -g typescript
+- npm i -g npm-check-updates
 deploy:
   provider: npm
   email: me@unsmart.co

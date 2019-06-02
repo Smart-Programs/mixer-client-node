@@ -11,10 +11,11 @@
 		"url": "https://github.com/Smart-Programs/mixer-client-node/issues"
 	},
 	"scripts": {
-		"build": "rimraf lib && tsc --declaration",
-		"chat": "npm run build && node lib/Tests/ChatTest.js",
-		"constellation": "npm run build && node lib/Tests/ConstellationTest.js",
-		"test": "npm run chat && npm run constellation"
+		"build": "npm run updater && rimraf lib && tsc --declaration",
+		"updater": "ncu -u && npm i",
+		"chat": "tsc && node lib/Tests/ChatTest.js",
+		"constellation": "tsc && node lib/Tests/ConstellationTest.js",
+		"test": "npm run updater && npm run chat && npm run constellation"
 	},
 	"keywords": [ "mixer", "client", "api", "constellation", "library", "oauth", "mixer" ],
 	"author": "Garret (itsUnsmart)",
