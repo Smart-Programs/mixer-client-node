@@ -6,17 +6,15 @@
 [![Travis](https://img.shields.io/travis/smart-programs/mixer-client-node.svg?logo=travis&label=Build&style=for-the-badge)](https://travis-ci.org/Smart-Programs/mixer-client-node)
 [![David](https://img.shields.io/david/smart-programs/mixer-client-node.svg?label=Dependencies&style=for-the-badge)](https://david-dm.org/Smart-Programs/mixer-client-node)
 
-
 [![Discord](https://img.shields.io/discord/492504918398074913.svg?logo=discord&label=Discord)](https://discord.gg/58RTAez)
 
-This is a client library for [Mixer](https://mixer.com/) written in Node.js.
+This is a client library for [Mixer](https://mixer.com/) written in [Node.js](https://nodejs.org/en/).
 
+## Support
 If you ever need any support on using the client be sure to join the [Discord](https://discord.gg/58RTAez) or post an issue on the [Github Repo](https://github.com/Smart-Programs/mixer-client-node/issues/new). Discord is highly recommended when asking for support as I check it more frequently.
 
 ## Installation
-```
-npm install --save mixer-client-node
-```
+`npm install --save mixer-client-node`
 
 Once github registry is open I will add a way to install it via github as well!
 
@@ -24,12 +22,14 @@ Once github registry is open I will add a way to install it via github as well!
 
 Need some help with tutorials? You can find the tutorials I have made [HERE](https://github.com/Smart-Programs/mixer-client-node/blob/master/Tutorials). There is a limited amount of tutorials due to the fact that I want to make sure the tutorials are high quality and understandable. If you want to submit any tutorials to me you can reach out to me via Discord: Unsmart#0917 or via email: [me@unsmart.co](mailto:me@unsmart.co).
 
-## Usage
+I recommend you look at the tutorials to get a basic understanding of how to use the client, and what each thing does.
+
+# Usage
 
 Here you can find all the basic things that this client can handle for you and how to use the client. If you have any issues understanding any documentation or if you find something is not working as you believe it should either send an issue on the [Github Repo](https://github.com/Smart-Programs/mixer-client-node/issues/new) or join the [Discord](https://discord.gg/58RTAez) and ask for support in the dev-support channel.
 
-### Client
-```
+## Client
+```javascript
 let Mixer = require('mixer-client-node').Client;
 
 // (All possibilities for inputs): This is recommended when using the chat services
@@ -57,13 +57,13 @@ If you have a secretid for your client you must set it in order to use the autho
 
 clientid must always be set as every service is required to know the clientid the requests are coming from to work.
 
-When using the chat features you must at least specify the access token and clientid at a minimum. It is recommended you specify the access and refresh (refresh tokens do not come with an implicit grant) tokens, client and secret ids, and the user object.
+When using the chat features you must at least specify the access token and clientid at a minimum. It is recommended you specify the access and refresh (refresh tokens do not come with an implicit grant) tokens, client and secret ids, and the user object. As it will make [connecting to chat](#join-a-chat) much easier.
 
-### Chat
+## Chat
 The following is a list of all the chat methods implemented.
 
-####  Join a chat
-```
+#### Join a chat
+```javascript
 client.joinChat(CHANNELID_TO_JOIN, USERID_TO_JOIN_AS, AUTO_RECONNECT (true || false));
 client.joinChat(CHANNELID_TO_JOIN, USERID_TO_JOIN_AS);
 client.joinChat(CHANNELID_TO_JOIN, AUTO_RECONNECT);
@@ -84,19 +84,19 @@ It is recommended that you set the user object when creating the client instance
 Anonymous chat joining is not supported and not planned currently.
 
 #### Close connection to chat
-```
+```javascript
 client.closeChat(CHANNEL_ID); //CHANNEL_ID not needed if you are only connected to one chat
 //No 'closed' event will be emitted
 ```
 
 #### Send a chat message
-```
+```javascript
 client.sendChat("Enter a message to send", CHANNEL_ID); //CHANNEL_ID not needed if you are only connected to one chat
 ```
 Note: The 360 character count limit is handled by this client so put your full message in there without worrying about how long it is!
 
 #### Chat Events
-```
+```javascript
 let chat = client.chatService
 
 chat.on('joined', data => {
@@ -153,7 +153,7 @@ chat.on('closed', channelid => {
 ### Authentication
 This client will handle refreshing tokens and checking  tokens via introspection for you.
 #### Refresh Tokens
-```
+```javascript
 client.refresh().then(response =>{
 	//Auto sets new tokens in the client and returns the response from `oauth/token` route.
 	console.log('Access token: ' + response.access_token);
@@ -164,7 +164,7 @@ client.refresh().then(response =>{
 })
 ```
 #### Introspect
-```
+```javascript
 client.introspect(TOKEN_TO_CHECK).then(response => {
 	//The response object is the same response from mixer, the  expires field on  the tokens will be set to what is returned automatically
 	//For setting timeout on refresh you would do the following code:
@@ -178,7 +178,7 @@ client.introspect(TOKEN_TO_CHECK).then(response => {
 });
 ```
 #### Set Tokens
-```
+```javascript
 client.tokens = {
 	access:  'xxxxxxxx',
 	refresh:  'xxxxxxxx' //refresh is optional
@@ -187,7 +187,7 @@ client.tokens = {
 ```
 Note when using the [refresh tokens](#refresh-tokens) part of this client the new tokens are automatically set including the new expire time. The expires time is also set if you use the [introspect](#introspect) part of the client with the access token as the checked token.
 #### Get Tokens
-```
+```javascript
 let tokens = client.tokens
 
 let accessToken = client.accessToken || client.tokens.access
@@ -200,7 +200,7 @@ let didExpire = client.didExpire
 ### API Requests
 Using the request module from the client automatically limits requests to the correct rate-limit.
 #### Request
-```
+```javascript
 let requestOptions = {
 	method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
 	uri: "FULL_API_URL",
@@ -226,19 +226,19 @@ Some constellation features may change often and may include breaking changes, i
 Info on what each event returns may not be fully complete as I am still investigating every possibility of what constellation returns.
 
 #### Subscribe
-```
+```javascript
 client.subscribeTo('Event:to:subscribe' || [ 'event:1:sub', 'event:2:sub' ])
 ```
 #### Unsubscribe
-```
+```javascript
 client.unsubscribeTo('Event:to:unsubscribe' || [ 'event:1:unsub', 'event:2:unsub' ])
 ```
 #### Get Subscribed Events
-```
+```javascript
 let events = client.subscribedEvents // returns a string array of events
 ```
 #### Constellation Events
-```
+```javascript
 client.constellationService.on('subscribe', (data) => {
 	// data.events = array of events you are newly subscribing too
 	// you can get the full list with client.subscribedEvents - See this above
@@ -269,7 +269,8 @@ client.constellationService.on('error', (data) => {
 })
 
 client.constellationService.on('closed', () => {
-	// The subscription socket was closed: all of your events will need to be resubscribed too
+	// The subscription socket was closed
+	// all of your events will need to be resubscribed too
 })
 ```
 *Note: The payload data for each constellation event can be found [HERE](https://dev.mixer.com/reference/constellation/events/live). This also shows the event argument to pass in the [subscribe](#subscribe) event.

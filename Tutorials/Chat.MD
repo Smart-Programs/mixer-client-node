@@ -12,7 +12,7 @@ Before you can connect to the chat you must first authenticate with Mixer. If yo
 Now that you have gotten an authenticated user you will be able to connect to a chat.
 
 #### Setup the Mixer Client.
-```
+```javascript
 let Mixer = require('mixer-client-node').Client; // Javascript
 import { Client as Mixer } from 'mixer-client-node' // Typescript
 
@@ -37,7 +37,7 @@ The user object is not necessarily needed however it makes life easier when join
 
 #### Join a chat
 Now we will add the code in order to actually join a chat.
-```
+```javascript
 let Mixer = require('mixer-client-node').Client; // Javascript
 import { Client as Mixer } from 'mixer-client-node' // Typescript
 
@@ -79,7 +79,7 @@ The 3rd argument autoReconnect defaults to false, and when set to true anytime t
 
 #### Listen to Chat Events
 Now that we are connected to chat lets listen to when someone sends a chat message in the channel.
-```
+```javascript
 let Mixer = require('mixer-client-node').Client; // Javascript
 import { Client as Mixer } from 'mixer-client-node' // Typescript
 
