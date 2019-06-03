@@ -1,23 +1,32 @@
 {
 	"name": "mixer-client-node",
-	"version": "2.4.4",
+	"version": "2.5.0",
 	"description": "A node client for connecting to mixer and the mixer services",
-	"main": "lib/index.js",
+	"main": "dist/index.js",
+	"homepage": "https://github.com/Smart-Programs/mixer-client-node",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/Smart-Programs/mixer-client-node"
+		"url": "https://github.com/Smart-Programs/mixer-client-node.git"
 	},
 	"bugs": {
 		"url": "https://github.com/Smart-Programs/mixer-client-node/issues"
 	},
 	"scripts": {
-		"build": "npm i && rimraf lib && tsc --declaration",
-		"chat": "tsc && node lib/Tests/ChatTest.js",
-		"constellation": "tsc && node lib/Tests/ConstellationTest.js",
+		"build": "npm i && rimraf dist && tsc --declaration",
+		"chat": "tsc && node dist/Tests/ChatTest.js",
+		"constellation": "tsc && node dist/Tests/ConstellationTest.js",
 		"test": "npm i && npm run chat && npm run constellation"
 	},
-	"keywords": [ "mixer", "client", "api", "constellation", "library", "oauth", "mixer" ],
-	"author": "Garret (itsUnsmart)",
+	"keywords": [
+		"mixer",
+		"client",
+		"api",
+		"constellation",
+		"library",
+		"oauth",
+		"mixer"
+	],
+	"author": "Garret (https://github.com/itsUnsmart)",
 	"license": "MIT",
 	"publishConfig": {
 		"access": "public"
