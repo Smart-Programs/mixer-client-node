@@ -1,56 +1,120 @@
-### Basic Ping Bot
+# Chat Bot
+
+## Prerequisites
+1. [Create a Mixer OAuth Application](https://mixer.com/lab/oauth)
+2. Get [NodeJS and NPM](https://nodejs.org/en/) for your platform.
+3. [Create a new project with npm.](https://docs.npmjs.com/cli/init)
+4. Run `npm i -s mixer-client-node`
+
+## Writing the Code
+Before you can connect to the chat you must first authenticate with Mixer. If you dont know how to do so Mixer has a good tutorial for using [Short-Code OAuth](https://dev.mixer.com/reference/oauth/shortcodeauth). If you prefer using a web flow check out the [OAuth Quick Details](https://dev.mixer.com/reference/oauth/quickdetails) and use an [NPM package for OAuth](https://www.npmjs.com/search?q=oauth) I recommend [Simple OAuth 2](https://www.npmjs.com/package/simple-oauth2).
+
+Now that you have gotten an authenticated user you will be able to connect to a chat.
+
+#### Setup the Mixer Client.
 ```
 let Mixer = require('mixer-client-node').Client; // Javascript
 import { Client as Mixer } from 'mixer-client-node' // Typescript
 
 let client = new Mixer({
 	clientid: 'xxxxxx',
-	secretid: 'xxxxxx', // Only needed if you have a secret id
+	secretid: 'xxxxxx',
 	tokens: {
 		access: 'xxxxxx',
-		refresh: 'xxxxx' // Only needed if you have a refresh token or want to use the built in refresh features
+		refresh: 'xxxxx'
 	},
 	user: {
-		// User object not needed but if connecting to chats this is highly recommended
+		userid: 1,
+		channelid: 1
+	}
+})
+```
+clientid and secretid are both gotten from the very first step you did in [Create a Mixer OAuth Application](https://mixer.com/lab/oauth) (Note: a secretid is not always given and you can omit that field if you dont have one).
+
+The tokens object is what you will get with the [Short-Code OAuth](https://dev.mixer.com/reference/oauth/shortcodeauth) or WebFlow OAuth depending on which you picked to do.
+
+The user object is not necessarily needed however it makes life easier when joining chats as we wont have to specify the userid later.
+
+#### Join a chat
+Now we will add the code in order to actually join a chat.
+```
+let Mixer = require('mixer-client-node').Client; // Javascript
+import { Client as Mixer } from 'mixer-client-node' // Typescript
+
+let client = new Mixer({
+	clientid: 'xxxxxx',
+	secretid: 'xxxxxx',
+	tokens: {
+		access: 'xxxxxx',
+		refresh: 'xxxxx'
+	},
+	user: {
 		userid: 1,
 		channelid: 1
 	}
 })
 
-client.joinChat() // Joining channelid with userid as specified in the user object (the userid in the user object must own the tokens specified)
-client.joinChat(2) // Join channelid 2 with user specified in user object (the user must own the tokens specified)
-client.joinChat(3, 1) // Join channelid 3 with userid 1 (userid must be the owner of the tokens listed in the tokens object)
-// You can put true as the last variable (or only variable) in each situation to auto reconnect to chat Default: false
-// NO ANONYMOUS CHATS
+let CHANNEL_ID = client.user.channelid // or any channelid you want
+client.joinChat(CHANNEL_ID)
 
-// Now we are connected to 3 chats, the channelids being 1, 2, and 3
+let chat = client.chatService
 
-client.chatService.on('joined', (data) => {
-	console.log(`We are connected to channel ${data.connectedTo}, with the user ${data.userConnected}`)
-	// This is called 3 times for each channel we are connected to
+chat.on('error', (error, channelid) => {
+	// an error happened normally this means there is an error with Mixer
+  // or you did not give a correct userid / accessToken combo
+	// channelid = the channelid this error is associated with
 })
-
-client.chatService.on('ChatMessage', (data, channelid) => {
-	console.log(`${data.user_name} sent us a message in the channel ${channelid}`)
-	// channelid is the chat this message was sent in
-	// For our case this would either be channelid: 1, 2, or 3
-
-	if (data.command.trigger === '!ping')
-		client.sendChat(`Pong! @${data.user_name}`, channelid) // Send a message back
-	// Sine we are connecting to 3 chats we must give the 2nd parameter of channelid so it knows which chat to send the message to
-})
-
-client.chatService.on('closed', (channelid) => {
-	// Socket for channelid was closed (Not sent if auto reconnect set to true) Note: A joined event will be sent once you rejoin
-	// Also not sent if you force close the chat using client.chatService.close(channelid)
-})
-
-// When you are done with a certain chat you can close it:
-client.closeChat(1) // Close channel with channelid 1
-client.closeChat(2) // Close channel with channelid 2
-client.closeChat() // Close channel with channelid 3
-
-// The last one works without the channelid specified because it is the only chat you are connected to
-// It is always recommended to put in the channelid to close if you connect to multiple chats
-
 ```
+
+Note: When connecting to chat if you want to join the channelid you specified in the user object of the client you can omit the CHANNEL_ID argument. If you did not specify anything in the user object of the client you must provide 2-3 arguments (channelid, userid, autoReconnect) note that the userid you use must be the user that owns the tokens specified in the client.
+
+Also note that when creating the user object in client channelid does not need to be that users channelid it can be any channelid you want. If you do want to connect to a channel thats not listed in the user object you can specify just the channelid in the function to join that channel.
+
+The 3rd argument autoReconnect defaults to false, and when set to true anytime the socket closes (other than a force close using [client.closeChat()](https://www.npmjs.com/package/mixer-client-node#close-connection-to-chat)) it will reconnect the chat socket for you.
+
+#### Listen to Chat Events
+Now that we are connected to chat lets listen to when someone sends a chat message in the channel.
+```
+let Mixer = require('mixer-client-node').Client; // Javascript
+import { Client as Mixer } from 'mixer-client-node' // Typescript
+
+let client = new Mixer({
+	clientid: 'xxxxxx',
+	secretid: 'xxxxxx',
+	tokens: {
+		access: 'xxxxxx',
+		refresh: 'xxxxx'
+	},
+	user: {
+		userid: 1,
+		channelid: 1
+	}
+})
+
+let CHANNEL_ID = client.user.channelid // or any channelid you want
+client.joinChat(CHANNEL_ID)
+
+let chat = client.chatService
+
+chat.on('error', (error, channelid) => {
+	// an error happened normally this means there is an error with Mixer
+  // or you did not give a correct userid / accessToken combo
+	// channelid = the channelid this error is associated with
+})
+
+chat.on('ChatMessage', (data, channelid) => {
+	// channelid = the channelid this message is associated with
+	// data = the data object of the event see note*
+	// the data object is also modified to add a few objects
+	// data.command = { trigger: '!command', args: ["the", "arguments", "passed"]}
+	// data.message = { hasLink: false, text: "This is the full text of the message"}
+	// data.message.hasLink will be true if the message contains a link
+
+	if(data.command.trigger === '!ping') {
+		// someone ran the ping command
+		// respond with Pong! @username
+		client.sendChat("Pong! @" + data.user_name, channelid)
+	}
+})
+```
+Note: The data object can be found at the [ChatMessage Event Page on the Mixer Dev Site](https://dev.mixer.com/reference/chat/events/chatmessage)
