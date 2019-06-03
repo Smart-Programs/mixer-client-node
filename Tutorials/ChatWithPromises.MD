@@ -1,17 +1,17 @@
 # Chat Bot using Promises
 
 ## Prerequisites
-1. [Create a Mixer OAuth Application](https://mixer.com/lab/oauth)
-2. Get [NodeJS and NPM](https://nodejs.org/en/) for your platform.
-3. [Create a new project with npm.](https://docs.npmjs.com/cli/init)
-4. Run `npm i -s mixer-client-node`
+1.  [Create a Mixer OAuth Application](https://mixer.com/lab/oauth)
+2.  Get [NodeJS and NPM](https://nodejs.org/en/) for your platform.
+3.  [Create a new project with npm.](https://docs.npmjs.com/cli/init)
+4.  Run `npm i -s mixer-client-node`
 
 ## Writing the Code
 Before you can connect to the chat you must first authenticate with Mixer. If you dont know how to do so Mixer has a good tutorial for using [Short-Code OAuth](https://dev.mixer.com/reference/oauth/shortcodeauth). If you prefer using a web flow check out the [OAuth Quick Details](https://dev.mixer.com/reference/oauth/quickdetails) and use an [NPM package for OAuth](https://www.npmjs.com/search?q=oauth) I recommend [Simple OAuth 2](https://www.npmjs.com/package/simple-oauth2).
 
 Now that you have gotten an authenticated user you will be able to connect to a chat.
 
-#### Setup the Mixer Client.
+### Setup the Mixer Client
 ```javascript
 let Mixer = require('mixer-client-node').Client; // Javascript
 import { Client as Mixer } from 'mixer-client-node' // Typescript
@@ -35,7 +35,7 @@ The tokens object is what you will get with the [Short-Code OAuth](https://dev.m
 
 The user object is not necessarily needed however it makes life easier when joining chats as we wont have to specify the userid later.
 
-#### Join a chat
+### Join a chat
 Now we will add the code in order to actually join a chat.
 ```javascript
 let Mixer = require('mixer-client-node').Client; // Javascript
@@ -66,7 +66,7 @@ client.joinChat(CHANNEL_ID).then(socket => {
 
 Note: When connecting to chat if you want to join the channelid you specified in the user object of the client you can omit the CHANNEL_ID argument. If you did not specify anything in the user object of the client you must provide 2 arguments (channelid, userid) note that the userid you use must be the user that owns the tokens specified in the client. Also note that when creating the user object in client channelid does not need to be that users channelid it can be any channelid you want. If you do want to connect to a channel thats not listed in the user object you can specify just the channelid in the function to join that channel.
 
-#### Listen to Chat Events
+### Listen to Chat Events
 Now that we are connected to chat lets listen to when someone sends a chat message in the channel.
 ```javascript
 let Mixer = require('mixer-client-node').Client; // Javascript

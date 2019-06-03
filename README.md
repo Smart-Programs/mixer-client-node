@@ -24,11 +24,11 @@ Need some help with tutorials? You can find the tutorials I have made [HERE](htt
 
 I recommend you look at the tutorials to get a basic understanding of how to use the client, and what each thing does.
 
-# Usage
+## Usage
 
 Here you can find all the basic things that this client can handle for you and how to use the client. If you have any issues understanding any documentation or if you find something is not working as you believe it should either send an issue on the [Github Repo](https://github.com/Smart-Programs/mixer-client-node/issues/new) or join the [Discord](https://discord.gg/58RTAez) and ask for support in the dev-support channel.
 
-## Client
+### Client
 ```javascript
 let Mixer = require('mixer-client-node').Client;
 
@@ -59,7 +59,7 @@ clientid must always be set as every service is required to know the clientid th
 
 When using the chat features you must at least specify the access token and clientid at a minimum. It is recommended you specify the access and refresh (refresh tokens do not come with an implicit grant) tokens, client and secret ids, and the user object. As it will make [connecting to chat](#join-a-chat) much easier.
 
-## Chat
+### Chat
 The following is a list of all the chat methods implemented.
 
 #### Join a chat

@@ -1,17 +1,17 @@
 # Chat Bot
 
 ## Prerequisites
-1. [Create a Mixer OAuth Application](https://mixer.com/lab/oauth)
-2. Get [NodeJS and NPM](https://nodejs.org/en/) for your platform.
-3. [Create a new project with npm.](https://docs.npmjs.com/cli/init)
-4. Run `npm i -s mixer-client-node`
+1.  [Create a Mixer OAuth Application](https://mixer.com/lab/oauth)
+2.  Get [NodeJS and NPM](https://nodejs.org/en/) for your platform.
+3.  [Create a new project with npm.](https://docs.npmjs.com/cli/init)
+4.  Run `npm i -s mixer-client-node`
 
 ## Writing the Code
 Before you can connect to the chat you must first authenticate with Mixer. If you dont know how to do so Mixer has a good tutorial for using [Short-Code OAuth](https://dev.mixer.com/reference/oauth/shortcodeauth). If you prefer using a web flow check out the [OAuth Quick Details](https://dev.mixer.com/reference/oauth/quickdetails) and use an [NPM package for OAuth](https://www.npmjs.com/search?q=oauth) I recommend [Simple OAuth 2](https://www.npmjs.com/package/simple-oauth2).
 
 Now that you have gotten an authenticated user you will be able to connect to a chat.
 
-#### Setup the Mixer Client.
+### Setup the Mixer Client
 ```javascript
 let Mixer = require('mixer-client-node').Client; // Javascript
 import { Client as Mixer } from 'mixer-client-node' // Typescript
@@ -35,7 +35,7 @@ The tokens object is what you will get with the [Short-Code OAuth](https://dev.m
 
 The user object is not necessarily needed however it makes life easier when joining chats as we wont have to specify the userid later.
 
-#### Join a chat
+### Join a chat
 Now we will add the code in order to actually join a chat.
 ```javascript
 let Mixer = require('mixer-client-node').Client; // Javascript
@@ -77,7 +77,7 @@ Also note that when creating the user object in client channelid does not need t
 
 The 3rd argument autoReconnect defaults to false, and when set to true anytime the socket closes (other than a force close using [client.closeChat()](https://www.npmjs.com/package/mixer-client-node#close-connection-to-chat)) it will reconnect the chat socket for you.
 
-#### Listen to Chat Events
+### Listen to Chat Events
 Now that we are connected to chat lets listen to when someone sends a chat message in the channel.
 ```javascript
 let Mixer = require('mixer-client-node').Client; // Javascript
