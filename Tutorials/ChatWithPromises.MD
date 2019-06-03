@@ -111,3 +111,6 @@ client.joinChat(CHANNEL_ID).then(socket => {
 Note: Since we are asking for the client to send us the socket connection we dont need the client to emit us data when something happens on the chat socket. If we didn't ask for the socket we would listen to the chatService sending us events instead of the socket itself.
 
 Note 2: client.sendChat() is a function built directly in the client normally you would use socket.send() to send a message to the socket, the CHANNEL_ID is only needed if you are connected to more than one chat but its highly recommended to provide even if you are only connected to one chat.
+
+#### Other Events
+Now that you know how to listen to the ChatMessage Events you can easily apply the same logic you did with that event to listen to other events, all the events are listed on [the Mixer Dev Site in the Chat Reference](https://dev.mixer.com/reference/chat/events). Just click on the event you want to listen to in order to see the data that will send, and use the same if(data.event === EventName) format for getting the data you want!

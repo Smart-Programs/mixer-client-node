@@ -64,6 +64,11 @@ chat.on('error', (error, channelid) => {
   // or you did not give a correct userid / accessToken combo
 	// channelid = the channelid this error is associated with
 })
+
+chat.on('warning', data => {
+	// a warning means you did something wrong
+	// forgot to include something necessary in a function
+})
 ```
 
 Note: When connecting to chat if you want to join the channelid you specified in the user object of the client you can omit the CHANNEL_ID argument. If you did not specify anything in the user object of the client you must provide 2-3 arguments (channelid, userid, autoReconnect) note that the userid you use must be the user that owns the tokens specified in the client.
@@ -102,6 +107,11 @@ chat.on('error', (error, channelid) => {
 	// channelid = the channelid this error is associated with
 })
 
+chat.on('warning', data => {
+	// a warning means you did something wrong
+	// forgot to include something necessary in a function
+})
+
 chat.on('ChatMessage', (data, channelid) => {
 	// channelid = the channelid this message is associated with
 	// data = the data object of the event see note*
@@ -118,3 +128,6 @@ chat.on('ChatMessage', (data, channelid) => {
 })
 ```
 Note: The data object can be found at the [ChatMessage Event Page on the Mixer Dev Site](https://dev.mixer.com/reference/chat/events/chatmessage)
+
+#### Other Events
+Now that you know how to listen to the ChatMessage Events you can easily apply the same logic you did with that event to listen to other events, all the events are listed on [the Mixer Dev Site in the Chat Reference](https://dev.mixer.com/reference/chat/events). Just click on the event you want to listen to in order to see the data that will send, and use the same chat.on(EventName, (data, channelid)) format for getting the data you want!
