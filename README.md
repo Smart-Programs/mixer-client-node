@@ -73,7 +73,9 @@ client.joinChat();
 
 // OR you can get the chat socket using promises
 
-client.joinChat().then(socket => {
+client.joinChat(channelid).then(socket => {
+	client.chatService.unlisten(channelid) // makes it so the chatService wont emit any events for the specific channelid
+	// to re listen do client.chatService.listen(channelid)
 	socket.on(...)
 }).catch(console.error)
 ```

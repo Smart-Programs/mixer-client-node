@@ -78,7 +78,7 @@ class ChatService extends EventEmitter {
 		})
 
 		this.socket.get(channelid).on('message', (response) => {
-			if (!this.listener) return
+			if (!this.listener.get(channelid) || this.eventNames().length === 0) return
 
 			response = JSON.parse(response)
 			if (response.type === 'reply') {
@@ -126,7 +126,7 @@ class ChatService extends EventEmitter {
 		})
 
 		this.socket.get(channelid).on('error', (error) => {
-			if (!this.listener || this.listenerCount('error') === 0) return
+			if (!this.listener.get(channelid) || this.listenerCount('error') === 0) return
 			this.emit('error', error, channelid)
 		})
 
@@ -136,6 +136,16 @@ class ChatService extends EventEmitter {
 			if (!this.listener.get(channelid) || this.autoReconnect.get(channelid)) return
 			else this.emit('closed', channelid)
 		})
+	}
+
+	public unlisten (channelid: number) {
+		const id = this.socket.size === 1 ? this.socket.keys().next().value : channelid
+		if (id && this.chatSocket(id)) this.listener.set(id, false)
+	}
+
+	public listen (channelid: number) {
+		const id = this.socket.size === 1 ? this.socket.keys().next().value : channelid
+		if (id && this.chatSocket(id)) this.listener.set(id, true)
 	}
 
 	/*
