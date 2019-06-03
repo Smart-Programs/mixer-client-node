@@ -1,7 +1,2 @@
-node_modules
-lib/Test
-src
-.travis.yml
-.gitignore
-tsconfig.json
-tslint.json
+/*
+!/lib
