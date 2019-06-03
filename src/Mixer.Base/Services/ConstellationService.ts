@@ -1,9 +1,8 @@
 import { EventEmitter } from 'events'
 import WebSocket = require('ws')
-import { isRegExp } from 'util'
 
 class ConstellationService extends EventEmitter {
-	private socket: any
+	private socket: WebSocket
 	private CONSTELLATION_URL: string
 	private events: string[] = []
 	private mostRecent: string[] = []
@@ -53,7 +52,7 @@ class ConstellationService extends EventEmitter {
 	}
 
 	private eventListener () {
-		this.socket.on('message', (data) => {
+		this.socket.on('message', (data: any) => {
 			data = JSON.parse(data)
 			if (data.type === 'reply') {
 				if (data.error && data.error.code === 4106) {
@@ -80,6 +79,10 @@ class ConstellationService extends EventEmitter {
 					this.emit(data.type, data)
 				}
 			}
+		})
+
+		this.socket.on('unexpected-response', (data) => {
+			this.emit('error', data)
 		})
 
 		this.socket.on('error', (error) => {
