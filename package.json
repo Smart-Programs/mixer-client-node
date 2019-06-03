@@ -1,6 +1,6 @@
 {
 	"name": "mixer-client-node",
-	"version": "2.5.0",
+	"version": "2.5.1",
 	"description": "A node client for connecting to mixer and the mixer services",
 	"main": "dist/index.js",
 	"homepage": "https://github.com/Smart-Programs/mixer-client-node",
@@ -17,15 +17,7 @@
 		"constellation": "tsc && node dist/Tests/ConstellationTest.js",
 		"test": "npm i && npm run chat && npm run constellation"
 	},
-	"keywords": [
-		"mixer",
-		"client",
-		"api",
-		"constellation",
-		"library",
-		"oauth",
-		"mixer"
-	],
+	"keywords": [ "mixer", "client", "api", "constellation", "library", "oauth", "mixer" ],
 	"author": "Garret (https://github.com/itsUnsmart)",
 	"license": "MIT",
 	"publishConfig": {
