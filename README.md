@@ -70,6 +70,12 @@ client.joinChat(CHANNELID_TO_JOIN, AUTO_RECONNECT);
 client.joinChat(CHANNELID_TO_JOIN);
 client.joinChat(AUTO_RECONNECT);
 client.joinChat();
+
+// OR you can get the chat socket using promises
+
+client.joinChat().then(socket => {
+	socket.on(...)
+}).catch(console.error)
 ```
 It is recommended that you set the user object when creating the client instance as it makes the join command much simpler. You can do just client.joinChat() instead of having to input the channelid to join, and the userid of the token owner. Also note: The channelid you set in the user object does NOT have to be the owner of the tokens (the userid has to be) you can set the channelid to any channel you want, so if the userid is the bot account you can set the channelid to the streamers channelid. [See client info](#client)
 

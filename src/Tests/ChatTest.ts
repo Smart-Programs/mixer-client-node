@@ -32,22 +32,20 @@ chat.on('joined', (data) => {
 let sentToUser: string
 
 chat.on('ChatMessage', (data, channelid) => {
-	const command = data.message.message[0].text.toLowerCase()
-	const msg: string = data.message.message.map((part) => part.text).join('')
-
-	if (command === '!ping' && channelid === 529479) {
+	if (data.command.trigger === '!ping' && channelid === 529479) {
 		sentToUser = data.user_name
 		console.log("We successfully received the ping command now replying with 'Pong! @" + sentToUser + "'...")
 		client.sendChat(`Pong! @${sentToUser}`, channelid)
-	} else if (msg === 'Pong! @' + sentToUser && channelid === 529479) {
+	} else if (data.message.text === 'Pong! @' + sentToUser && channelid === 529479) {
 		console.log('We successfully received the pong message we sent to the user...')
 
 		client.joinChat(22984210)
-	} else if (longMessage.endsWith(msg)) {
+	} else if (longMessage.endsWith(data.message.text)) {
 		console.log('We successfully sent the long message over the limit...')
 
-		console.log('All test were completed successfully...')
-		process.exit(0)
+		console.log('Attempting to clear the chat...')
+
+		chat.clearChat(529479)
 	}
 })
 
@@ -61,6 +59,11 @@ chat.on('reply', (error, data, id) => {
 			const msg = data.message.message.map((part) => part.text).join('')
 
 			console.log('We successfully sent a message saying: "' + msg + '" In the channel ' + id + '...')
+		} else if (data.id === 103) {
+			console.log('We successfully cleared the chat...')
+
+			console.log('All test were completed successfully...')
+			process.exit(0)
 		} else {
 			console.log(data, id)
 		}

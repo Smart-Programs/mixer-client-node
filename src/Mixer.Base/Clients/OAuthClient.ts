@@ -62,12 +62,19 @@ export function validateToken (client: Client, token: string) {
 			.request(options)
 			.then((response: IValidateTokenResponse) => {
 				if (response.active) {
-					if (response.token_type === 'access_token') {
+					if (response.token_type === 'access_token' && token === client.accessToken) {
 						client.tokens = {
 							access: client.accessToken,
 							expires: response.exp,
 							refresh: client.refreshToken
 						}
+
+						client.user = {
+							channelid: client.user.channelid,
+							userid: response.sub
+						}
+
+						client.clientid = response.client_id
 					}
 					resolve(response)
 				} else {
@@ -83,8 +90,10 @@ export function validateToken (client: Client, token: string) {
 
 interface IValidateTokenResponse {
 	active: boolean
+	client_id: string
 	token_type?: string
 	exp?: number
+	sub: number
 }
 
 interface IRefreshAuthBody {

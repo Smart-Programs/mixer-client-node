@@ -7,7 +7,6 @@ let client = new Mixer({
 	clientid: 'xxxxxx',
 	secretid: 'xxxxxx', // Only needed if you have a secret id
 	tokens: {
-		// Tokens only needed for chat functionality if you only need constellation you don't need this
 		access: 'xxxxxx',
 		refresh: 'xxxxx' // Only needed if you have a refresh token or want to use the built in refresh features
 	},
@@ -18,7 +17,7 @@ let client = new Mixer({
 	}
 })
 
-client.joinChat() // Joining channelid with userid as specified in the user object (the user must own the tokens specified)
+client.joinChat() // Joining channelid with userid as specified in the user object (the userid in the user object must own the tokens specified)
 client.joinChat(2) // Join channelid 2 with user specified in user object (the user must own the tokens specified)
 client.joinChat(3, 1) // Join channelid 3 with userid 1 (userid must be the owner of the tokens listed in the tokens object)
 // You can put true as the last variable (or only variable) in each situation to auto reconnect to chat Default: false
@@ -36,8 +35,8 @@ client.chatService.on('ChatMessage', (data, channelid) => {
 	// channelid is the chat this message was sent in
 	// For our case this would either be channelid: 1, 2, or 3
 
-	if (data.message.message[0].text.toLowerCase() === '!ping')
-		client.chatService.sendMessage(`Pong! @${data.user_name}`, channelid) // Send a message back
+	if (data.command.trigger === '!ping')
+		client.sendChat(`Pong! @${data.user_name}`, channelid) // Send a message back
 	// Sine we are connecting to 3 chats we must give the 2nd parameter of channelid so it knows which chat to send the message to
 })
 
@@ -47,9 +46,9 @@ client.chatService.on('closed', (channelid) => {
 })
 
 // When you are done with a certain chat you can close it:
-client.chatService.close(1) // Close channel with channelid 1
-client.chatService.close(2) // Close channel with channelid 2
-client.chatService.close() // Close channel with channelid 3
+client.closeChat(1) // Close channel with channelid 1
+client.closeChat(2) // Close channel with channelid 2
+client.closeChat() // Close channel with channelid 3
 
 // The last one works without the channelid specified because it is the only chat you are connected to
 // It is always recommended to put in the channelid to close if you connect to multiple chats
