@@ -7,7 +7,7 @@ class ChatService extends EventEmitter {
 	private autoReconnect = new Map<number, boolean>()
 	private socket = new Map<number, WebSocket>()
 	private listener = new Map<number, any>()
-
+	private currentId = 0
 	private client: Client
 
 	constructor (client: Client) {
@@ -161,10 +161,10 @@ class ChatService extends EventEmitter {
 	/*
 		* Send the server a packet of info
 		*/
-	private sendPacket (method: string, args: any[], channelid: number, id?: number) {
+	private sendPacket (method: string, args: any[], channelid: number, id: number = 0) {
 		const packet: IPacket = {
 			arguments: args,
-			id: id || 0,
+			id,
 			method,
 			type: 'method'
 		}
@@ -183,21 +183,19 @@ class ChatService extends EventEmitter {
 
 	/*
 	 * Send a chat message to a channel
-	 * The ID in the reply will be 100
 	 */
-	public sendMessage (message: string, channelid?: number) {
-		const id = this.socket.size === 1 ? this.socket.keys().next().value : channelid
-		if (id) {
+	public sendMessage (message: string, channelid = this.socket.size === 1 ? this.socket.keys().next().value : 0) {
+		if (this.socket.get(channelid)) {
 			if (message && message.length > 360) {
 				const getPart = () => {
 					const part = message.substr(0, message.lastIndexOf(' ', 360)).trim()
-					this.sendMessage(part, id)
+					this.sendMessage(part, channelid)
 					message = message.replace(part, '').trim()
 
 					setTimeout(() => {
 						if (message.length <= 360) {
 							if (message.trim().length !== 0) {
-								this.sendMessage(message, id)
+								this.sendMessage(message, channelid)
 							}
 						} else {
 							getPart()
@@ -207,8 +205,10 @@ class ChatService extends EventEmitter {
 
 				getPart()
 			} else {
-				if (message) this.sendPacket('msg', [ message ], id, 100)
-				else {
+				if (message) {
+					this.currentId += 1
+					this.sendPacket('msg', [ message ], channelid, this.currentId)
+				} else {
 					this.emit('warning', {
 						code: 1000,
 						id: 2,
@@ -229,21 +229,23 @@ class ChatService extends EventEmitter {
 
 	/*
 	 * Send a whisper message to a user in a channel
-	 * The ID in the reply will be 101
 	 */
-	public sendWhisper (message: string, sendToUser: string, channelid?: number) {
-		const id = this.socket.size === 1 ? this.socket.keys().next().value : channelid
-		if (id) {
+	public sendWhisper (
+		message: string,
+		sendToUser: string,
+		channelid = this.socket.size === 1 ? this.socket.keys().next().value : 0
+	) {
+		if (this.socket.get(channelid)) {
 			if (message && message.length > 360) {
 				const getPart = () => {
 					const part = message.substr(0, message.lastIndexOf(' ', 360))
-					this.sendWhisper(part, sendToUser, id)
+					this.sendWhisper(part, sendToUser, channelid)
 					message = message.replace(part, '')
 
 					setTimeout(() => {
 						if (message.length <= 360) {
 							if (message.trim().length !== 0) {
-								this.sendWhisper(message, sendToUser, id)
+								this.sendWhisper(message, sendToUser, channelid)
 							}
 						} else {
 							getPart()
@@ -253,8 +255,10 @@ class ChatService extends EventEmitter {
 
 				getPart()
 			} else {
-				if (sendToUser && message) this.sendPacket('whisper', [ sendToUser, message ], id, 101)
-				else {
+				if (sendToUser && message) {
+					this.currentId += 1
+					this.sendPacket('whisper', [ sendToUser, message ], channelid, this.currentId)
+				} else {
 					this.emit('warning', {
 						code: 1000,
 						id: 2,
@@ -275,13 +279,13 @@ class ChatService extends EventEmitter {
 
 	/*
 	 * Delete a message
-	 * The ID in the reply will be 102
 	 */
-	public deleteMessage (messageID: string, channelid?: number) {
-		const id = this.socket.size === 1 ? this.socket.keys().next().value : channelid
-		if (id) {
-			if (messageID) this.sendPacket('timeout', [ messageID ], id, 102)
-			else {
+	public deleteMessage (messageID: string, channelid = this.socket.size === 1 ? this.socket.keys().next().value : 0) {
+		if (this.socket.get(channelid)) {
+			if (messageID) {
+				this.currentId += 1
+				this.sendPacket('timeout', [ messageID ], channelid, this.currentId)
+			} else {
 				this.emit('warning', {
 					code: 1000,
 					id: 2,
@@ -301,12 +305,11 @@ class ChatService extends EventEmitter {
 
 	/*
 	 * Clear chat
-	 * The ID in the reply will be 103
 	 */
-	public clearChat (channelid?: number) {
-		const id = this.socket.size === 1 ? this.socket.keys().next().value : channelid
-		if (id) {
-			this.sendPacket('clearMessages', [], id, 103)
+	public clearChat (channelid = this.socket.size === 1 ? this.socket.keys().next().value : 0) {
+		if (this.socket.get(channelid)) {
+			this.currentId += 1
+			this.sendPacket('clearMessages', [], channelid, this.currentId)
 		} else {
 			this.emit('warning', {
 				code: 1000,
@@ -319,13 +322,17 @@ class ChatService extends EventEmitter {
 
 	/*
 	 * Timeout a user in a channel
-	 * The ID in the reply will be 200
 	 */
-	public timeoutUser (username: string, time: string, channelid?: number) {
-		const id = this.socket.size === 1 ? this.socket.keys().next().value : channelid
-		if (id) {
-			if (username && time) this.sendPacket('timeout', [ username, time ], id, 200)
-			else {
+	public timeoutUser (
+		username: string,
+		time: string,
+		channelid = this.socket.size === 1 ? this.socket.keys().next().value : 0
+	) {
+		if (this.socket.get(channelid)) {
+			if (username && time) {
+				this.currentId += 1
+				this.sendPacket('timeout', [ username, time ], channelid, this.currentId)
+			} else {
 				this.emit('warning', {
 					code: 1000,
 					id: 2,
@@ -345,13 +352,13 @@ class ChatService extends EventEmitter {
 
 	/*
 	 * Purge a user in a channel
-	 * The ID in the reply will be 201
 	 */
-	public purgeUser (username: string, channelid?: number) {
-		const id = this.socket.size === 1 ? this.socket.keys().next().value : channelid
-		if (id) {
-			if (username) this.sendPacket('purge', [ username ], id, 201)
-			else {
+	public purgeUser (username: string, channelid = this.socket.size === 1 ? this.socket.keys().next().value : 0) {
+		if (this.socket.get(channelid)) {
+			if (username) {
+				this.currentId += 1
+				this.sendPacket('purge', [ username ], channelid, this.currentId)
+			} else {
 				this.emit('warning', {
 					code: 1000,
 					id: 2,
@@ -372,33 +379,22 @@ class ChatService extends EventEmitter {
 	/*
 	 * Close the connection to a chat
 	 */
-	public close (channelid?: number, rejoin?: boolean) {
-		let id: number
-		if (this.socket.size === 1) id = this.socket.keys().next().value
-		else if (this.socket.size === 0)
-			this.emit('warning', {
-				code: 1002,
-				id: 1,
-				reason: 'You MUST first connect to a channel before you can close a connection',
-				warning: 'Not Connected To A Channel'
-			})
-		else id = channelid
+	public close (channelid = this.socket.size === 1 ? this.socket.keys().next().value : 0, rejoin = false) {
+		if (this.socket.get(channelid)) {
+			const reconnectSetting = this.autoReconnect.get(channelid)
+			this.listener.set(channelid, false)
+			this.socket.get(channelid).terminate()
 
-		if (id && this.socket.get(id)) {
-			const reconnectSetting = this.autoReconnect.get(id)
-			this.listener.set(id, false)
-			this.socket.get(id).terminate()
-
-			this.autoReconnect.delete(id)
-			this.listener.delete(id)
-			this.socket.delete(id)
-			if (rejoin) this.join(this.client.user.userid, id, reconnectSetting)
+			this.autoReconnect.delete(channelid)
+			this.listener.delete(channelid)
+			this.socket.delete(channelid)
+			if (rejoin) this.join(this.client.user.userid, channelid, reconnectSetting)
 		} else {
 			this.emit('warning', {
-				code: 1002,
-				id: 2,
-				reason: 'You MUST provide a channelid to close connection to when connected to multiple channels',
-				warning: 'ChannelID to Close to Not Specified'
+				code: 1001,
+				id: 1,
+				reason: 'You MUST provide a valid channelid to close connection to',
+				warning: 'ChannelID to Close to Not Specified or Found'
 			})
 		}
 	}

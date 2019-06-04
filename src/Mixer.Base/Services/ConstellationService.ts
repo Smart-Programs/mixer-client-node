@@ -6,6 +6,7 @@ class ConstellationService extends EventEmitter {
 	private events: string[] = []
 	private subscribingTo: string[] = []
 	private unsubscribingTo: string[] = []
+	private currentId: number = 0
 
 	constructor (private clientid: string) {
 		super()
@@ -17,6 +18,8 @@ class ConstellationService extends EventEmitter {
 	 * Create the constellation socket
 	 */
 	private createSocket () {
+		this.currentId = 0
+
 		this.socket = new WebSocket('wss://constellation.mixer.com', 'cnstl-gzip', {
 			headers: {
 				'client-id': this.clientid,
@@ -32,20 +35,6 @@ class ConstellationService extends EventEmitter {
 
 			this.subscribe(subTo)
 		}
-
-		this.ping()
-	}
-
-	// See if pinging the socket fixes no events fired issue
-	private timeout: NodeJS.Timeout
-	private ping () {
-		if (this.timeout) clearTimeout(this.timeout)
-
-		this.timeout = setTimeout(() => {
-			if (this.socket.readyState !== 1) this.emit('error', { socket: 'Closed', from: 'Ping' })
-			else this.sendPacket('ping', null, 5)
-			this.ping()
-		}, 10000)
 	}
 
 	/*
@@ -74,29 +63,25 @@ class ConstellationService extends EventEmitter {
 			if (data.event === 'hello') return this.emit('open', data.data)
 
 			if (data.type === 'reply') {
-				if ([ 42, 43, 5 ].includes(data.id)) {
-					if (data.id === 42) {
-						// subscribingTo
-						const oldRecent = this.subscribingTo
-						this.subscribingTo = []
-						if (data.error) this.emit(data.type, { result: data.result, error: data.error, data })
-						else {
-							// subscribe success
-							this.events = [ ...this.events, ...oldRecent ]
-							this.emit('subscribe', { events: oldRecent })
-						}
-					} else if (data.id === 43) {
-						// unsubscribingTo
-						const oldRecent = this.unsubscribingTo
-						this.unsubscribingTo = []
-						if (data.error) this.emit(data.type, { result: data.result, error: data.error, data })
-						else {
-							// unsubscribe success
-							this.events = this.events.filter((event) => !oldRecent.includes(event))
-							this.emit('unsubscribe', { events: oldRecent })
-						}
-					} else {
-						if (data.error) this.emit('error', { error: data.error, from: 'ping' })
+				if (this.subIds.includes(data.id)) {
+					this.subIds = this.subIds.slice(this.subIds.indexOf(data.id))
+					const oldRecent = this.subscribingTo
+					this.subscribingTo = []
+					if (data.error) this.emit(data.type, { result: data.result, error: data.error, data })
+					else {
+						// subscribe success
+						this.events = [ ...this.events, ...oldRecent ]
+						this.emit('subscribe', { events: oldRecent })
+					}
+				} else if (this.unSubIds.includes(data.id)) {
+					this.unSubIds = this.unSubIds.slice(this.unSubIds.indexOf(data.id))
+					const oldRecent = this.unsubscribingTo
+					this.unsubscribingTo = []
+					if (data.error) this.emit(data.type, { result: data.result, error: data.error, data })
+					else {
+						// unsubscribe success
+						this.events = this.events.filter((event) => !oldRecent.includes(event))
+						this.emit('unsubscribe', { events: oldRecent })
 					}
 				} else {
 					this.emit(data.type, { result: data.result, error: data.error, data })
@@ -136,6 +121,7 @@ class ConstellationService extends EventEmitter {
 	 * Subscribe to an event
 	 * Emits a subscribe event if successful
 	 */
+	private subIds: number[] = []
 	public subscribe (event: string | string[]) {
 		if (this.socket.readyState !== 1) {
 			this.once('open', () => {
@@ -147,8 +133,11 @@ class ConstellationService extends EventEmitter {
 			event = event.filter((name) => this.events.indexOf(name) === -1 && this.subscribingTo.indexOf(name) === -1)
 
 			if (event.length > 0) {
+				this.currentId += 1
+				const id = this.currentId
+				this.subIds.push(id)
 				this.subscribingTo = [ ...this.subscribingTo, ...event ]
-				this.sendPacket('livesubscribe', { events: event }, 42)
+				this.sendPacket('livesubscribe', { events: event }, id)
 			} else {
 				this.emit('warning', {
 					code: 2001,
@@ -165,14 +154,18 @@ class ConstellationService extends EventEmitter {
 	 * UbSubscribe to an event
 	 * Emits an unsubscribe event if successful
 	 */
+	private unSubIds: number[] = []
 	public unsubscribe (event: string | string[]) {
 		event = typeof event === 'string' ? [ event ] : event
 		event = event.filter((name) => this.events.indexOf(name) !== -1)
 
-		this.unsubscribingTo = event
-
-		if (event.length > 0) this.sendPacket('liveunsubscribe', { events: event }, 43)
-		else {
+		if (event.length > 0) {
+			this.currentId += 1
+			const id = this.currentId
+			this.unSubIds.push(id)
+			this.unsubscribingTo = [ ...this.unsubscribingTo, ...event ]
+			this.sendPacket('liveunsubscribe', { events: event }, id)
+		} else {
 			this.emit('warning', {
 				code: 2000,
 				events: event,
