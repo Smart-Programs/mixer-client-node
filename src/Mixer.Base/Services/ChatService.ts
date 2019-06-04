@@ -97,7 +97,7 @@ class ChatService extends EventEmitter {
 				} else {
 					if (response.data && response.data.authenticated)
 						this.emit('joined', { connectedTo: channelid, userConnected: this.client.user.userid })
-					else this.emit(response.type, response.error, { ...response.data, id: response.id }, channelid)
+					else this.emit(response.type, response.error, response.data, channelid)
 				}
 			} else {
 				if (response.event === 'ChatMessage') {

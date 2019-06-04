@@ -32,7 +32,7 @@ chat.on('joined', (data) => {
 let sentToUser: string
 
 chat.on('ChatMessage', (data, channelid) => {
-	if (data.command.trigger === '!ping' && channelid === 529479) {
+	if (data.command && data.command.trigger === '!ping' && channelid === 529479) {
 		sentToUser = data.user_name
 		console.log("We successfully received the ping command now replying with 'Pong! @" + sentToUser + "'...")
 		client.sendChat(`Pong! @${sentToUser}`, channelid)
@@ -59,7 +59,7 @@ chat.on('reply', (error, data, id) => {
 			const msg = data.message.message.map((part) => part.text).join('')
 
 			console.log('We successfully sent a message saying: "' + msg + '" In the channel ' + id + '...')
-		} else if (data.id === 103) {
+		} else if (data.startsWith('Messages cleared.')) {
 			console.log('We successfully cleared the chat...')
 
 			console.log('Attempting to leave all the chats...')
