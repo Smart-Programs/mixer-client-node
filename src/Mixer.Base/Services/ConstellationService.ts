@@ -1,40 +1,53 @@
 import { EventEmitter } from 'events'
-import WebSocket = require('ws')
+import * as WebSocket from 'ws'
 
 class ConstellationService extends EventEmitter {
 	private socket: WebSocket
 	private CONSTELLATION_URL: string
 	private events: string[] = []
-	private mostRecent: string[] = []
+	private subscribingTo: string[] = []
+	private unsubscribingTo: string[] = []
 
 	constructor (clientid) {
 		super()
 
 		this.CONSTELLATION_URL = 'wss://constellation.mixer.com?x-is-bot=true&client-id=' + clientid
 
-		this.socket = new WebSocket(this.CONSTELLATION_URL)
-		this.socket.on('open', () => {
-			this.eventListener()
+		this.socket = new WebSocket(this.CONSTELLATION_URL, 'cnstl-gzip', {
+			headers: {
+				'client-id': clientid,
+				'x-is-bot': true
+			} as any
 		})
+
+		this.eventListener()
 	}
 
+	/*
+	 * Get the event's that you are subscribed to
+	 * Returns a string array
+	 */
 	public get subscribedEvents (): string[] {
 		return [ ...this.events ]
 	}
 
+	/*
+	 * Subscribe to an event
+	 * Emits a subscribe event if successful
+	 */
 	public subscribe (event: string | string[]) {
 		if (this.socket.readyState !== 1) {
-			this.socket.on('open', () => {
+			this.once('open', () => {
 				this.subscribe(event)
 			})
 		} else {
 			event = typeof event === 'string' ? [ event ] : event
 			const originalEvents = event
-			event = event.filter((name) => this.events.indexOf(name) === -1 && this.mostRecent.indexOf(name) === -1)
+			event = event.filter((name) => this.events.indexOf(name) === -1 && this.subscribingTo.indexOf(name) === -1)
 
 			if (event.length > 0) {
-				this.mostRecent = this.mostRecent ? [ ...this.mostRecent, ...event ] : event
-				this.connect(event)
+				this.subscribingTo = [ ...this.subscribingTo, ...event ]
+				this.sendPacket('livesubscribe', { events: event }, 42)
 			} else {
 				this.emit('warning', {
 					code: 2001,
@@ -47,53 +60,55 @@ class ConstellationService extends EventEmitter {
 		}
 	}
 
-	private connect (event: string[]) {
-		this.sendPacket('livesubscribe', { events: event }, 42)
-	}
-
+	/*
+	 * Setup the socket event listener to emit events
+	 */
 	private eventListener () {
-		this.socket.on('message', (data: any) => {
-			data = JSON.parse(data)
+		this.socket.addEventListener('error', (err) => this.emit('error', err))
+		this.socket.addEventListener('closed', () => this.emit('closed'))
+
+		this.socket.addEventListener('message', (data: any) => {
+			data = JSON.parse(data.data)
+
+			if (data.event === 'hello') return this.emit('open', data.data)
+
 			if (data.type === 'reply') {
-				if (data.error && data.error.code === 4106) {
-					this.mostRecent = []
-					this.emit('error', {
-						code: 404,
-						id: 1,
-						message: data.error.message
-					})
-				} else {
+				if ([ 42, 43 ].includes(data.id)) {
 					if (data.id === 42) {
-						const oldRecent = this.mostRecent
-						this.mostRecent = []
-						this.events = [ ...this.events, ...oldRecent ]
-						this.emit('subscribe', { events: oldRecent })
+						// subscribingTo
+						const oldRecent = this.subscribingTo
+						this.subscribingTo = []
+						if (data.error) this.emit(data.type, { result: data.result, error: data.error, data })
+						else {
+							// subscribe success
+							this.events = [ ...this.events, ...oldRecent ]
+							this.emit('subscribe', { events: oldRecent })
+						}
 					} else {
-						this.emit(data.type, { result: data.result, error: data.error, data })
+						// unsubscribingTo
+						const oldRecent = this.unsubscribingTo
+						this.unsubscribingTo = []
+						if (data.error) this.emit(data.type, { result: data.result, error: data.error, data })
+						else {
+							// unsubscribe success
+							this.events = this.events.filter((event) => !oldRecent.includes(event))
+							this.emit('unsubscribe', { events: oldRecent })
+						}
 					}
-				}
-			} else {
-				if (data.data.payload) {
-					this.emit(data.type, data.data.payload, data.data.channel)
 				} else {
-					this.emit(data.type, data)
+					this.emit(data.type, { result: data.result, error: data.error, data })
 				}
+			} else if (data.data && data.data.payload) {
+				this.emit(data.type, data.data.payload, data.data.channel)
+			} else {
+				this.emit(data.type, data)
 			}
 		})
-
-		this.socket.on('unexpected-response', (data) => {
-			this.emit('error', data)
-		})
-
-		this.socket.on('error', (error) => {
-			this.emit('error', error)
-		})
-
-		this.socket.on('closed', () => {
-			this.emit('closed')
-		})
 	}
 
+	/*
+	 * Send the socket data
+	 */
 	private sendPacket (method: string, params: IParams, id?: number) {
 		const packet: IPacket = {
 			id: id || 0,
@@ -101,9 +116,8 @@ class ConstellationService extends EventEmitter {
 			params,
 			type: 'method'
 		}
-		if (this.socket && this.socket.readyState === 1) {
-			this.socket.send(JSON.stringify(packet))
-		} else {
+		if (this.socket && this.socket.readyState === 1) this.socket.send(JSON.stringify(packet))
+		else {
 			this.emit('warning', {
 				code: 2000,
 				events: params,
@@ -119,10 +133,10 @@ class ConstellationService extends EventEmitter {
 		event = typeof event === 'string' ? [ event ] : event
 		event = event.filter((name) => this.events.indexOf(name) !== -1)
 
-		if (event.length > 0) {
-			this.sendPacket('liveunsubscribe', { events: event })
-			this.events = this.events.filter((name) => event.indexOf(name) !== -1)
-		} else {
+		this.unsubscribingTo = event
+
+		if (event.length > 0) this.sendPacket('liveunsubscribe', { events: event }, 43)
+		else {
 			this.emit('warning', {
 				code: 2000,
 				events: event,

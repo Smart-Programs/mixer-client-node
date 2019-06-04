@@ -19,9 +19,9 @@ constellation.on('subscribe', (data) => {
 			console.log('We successfully subscribed to all 3 events correctly...')
 			console.log(client.subscribedEvents.join(', '))
 
-			console.log('All test were completed successfully...')
+			console.log('Attempting to unsubscribe from all events...')
 
-			process.exit(0)
+			client.unsubscribeTo(client.subscribedEvents)
 		} else {
 			console.error('We did not subscribe to all 3 events correctly...')
 			console.error(client.subscribedEvents.join(', '))
@@ -31,22 +31,28 @@ constellation.on('subscribe', (data) => {
 	}
 })
 
+constellation.on('unsubscribe', (data) => {
+	if (data.events.length === 3 && constellation.subscribedEvents.length === 0) {
+		console.log('We successfully unsubscribed to all 3 events correctly...')
+
+		console.log('All test were completed successfully...')
+		process.exit(0)
+	} else {
+		console.error('We did not unsubscribe to all 3 events correctly...')
+		process.exit(1)
+	}
+})
+
 constellation.on('event', (data, event) => {
 	if (data.event === 'hello') console.log('The constellation socket is now connected...')
 	else console.log(JSON.stringify(data), event)
 })
 
 constellation.on('error', (data) => {
-	if (data.code === 404 && data.id === 1) {
-		console.log('An expected error occurred... (Not Found Event)')
-		client.subscribeTo('channel:529479:update')
-		client.subscribeTo('channel:529479:update')
-	} else {
-		console.error('An unexpected error occurred at constellation.on error')
-		console.error(data)
+	console.error('An unexpected error occurred at constellation.on error')
+	console.error(data)
 
-		process.exit(1)
-	}
+	process.exit(1)
 })
 
 constellation.on('warning', (data) => {
@@ -60,4 +66,12 @@ constellation.on('warning', (data) => {
 	}
 })
 
-constellation.on('reply', console.log)
+constellation.on('reply', (data) => {
+	if (data.error && data.error.code === 4106 && data.data.id === 42) {
+		console.log('An expected error occurred... (Not Found Event)')
+		client.subscribeTo('channel:529479:update')
+		client.subscribeTo('channel:529479:update')
+	} else {
+		console.log(data)
+	}
+})

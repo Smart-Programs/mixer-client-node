@@ -114,7 +114,7 @@ export class Client {
 	public joinChat (
 		channelidOrReconnect?: number | boolean,
 		useridOrReconnect?: number | boolean,
-		autoReconnect?: boolean
+		autoReconnect = false
 	): Promise<any> {
 		return new Promise((resolve, deny) => {
 			let channelid: number
@@ -125,10 +125,10 @@ export class Client {
 				channelid = channelidOrReconnect
 				if (typeof useridOrReconnect === 'number') {
 					userid = useridOrReconnect
-					reconnect = autoReconnect || false
+					reconnect = autoReconnect
 				} else {
 					userid = this.user.userid
-					reconnect = autoReconnect || false
+					reconnect = typeof useridOrReconnect === 'boolean' ? useridOrReconnect : false
 				}
 			} else if (this.user) {
 				channelid = this.user.channelid
