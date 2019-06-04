@@ -2,7 +2,15 @@
 	"name": "mixer-client-node",
 	"version": "2.6.1",
 	"description": "A node client for connecting to mixer and the mixer services",
-	"keywords": [ "mixer", "client", "api", "constellation", "library", "oauth", "mixer" ],
+	"keywords": [
+		"mixer",
+		"client",
+		"api",
+		"constellation",
+		"library",
+		"oauth",
+		"mixer"
+	],
 	"homepage": "https://github.com/Smart-Programs/mixer-client-node",
 	"bugs": {
 		"url": "https://github.com/Smart-Programs/mixer-client-node/issues",
@@ -26,6 +34,7 @@
 	"scripts": {
 		"build": "npm install && rimraf dist && tsc --declaration",
 		"chat": "tsc && node dist/Tests/ChatTest.js",
+		"ch": "tsc && node dist/Tests/LongChatTest.js",
 		"constellation": "tsc && node dist/Tests/ConstellationTest.js",
 		"const": "tsc && node dist/Tests/LongConstTest.js",
 		"test": "npm install && npm run chat && npm run constellation"
@@ -33,7 +42,6 @@
 	"dependencies": {
 		"request": "latest",
 		"request-promise": "latest",
-		"websocket": "latest",
 		"ws": "latest"
 	},
 	"devDependencies": {

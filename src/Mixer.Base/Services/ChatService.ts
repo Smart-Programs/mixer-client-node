@@ -5,7 +5,7 @@ import WebSocket = require('ws')
 
 class ChatService extends EventEmitter {
 	private autoReconnect = new Map<number, boolean>()
-	private socket = new Map<number, any>()
+	private socket = new Map<number, WebSocket>()
 	private listener = new Map<number, any>()
 
 	private client: Client
@@ -73,11 +73,11 @@ class ChatService extends EventEmitter {
 	private hookEventListeners (channelid: number, authkey: string) {
 		this.listener.set(channelid, true)
 
-		this.socket.get(channelid).on('open', () => {
+		this.socket.get(channelid).once('open', () => {
 			this.sendPacket('auth', [ channelid, this.client.user.userid, authkey ], channelid)
 		})
 
-		this.socket.get(channelid).on('message', (response) => {
+		this.socket.get(channelid).on('message', (response: any) => {
 			if (!this.listener.get(channelid) || this.eventNames().length === 0) return
 
 			response = JSON.parse(response)
@@ -103,23 +103,15 @@ class ChatService extends EventEmitter {
 				if (response.event === 'ChatMessage') {
 					const messageResponse = response.data.message.message
 					const hasLink = messageResponse.filter((part) => part.type === 'link').length > 0
-					const text: string = messageResponse.map((part) => part.text).join('')
+					const text: string = messageResponse.map((part) => part.text).join('').trim()
+					const message = { hasLink, text }
+
 					const isCommand = text.startsWith('!')
+					const trigger = isCommand ? text.split(' ')[0] : null
+					const args: string[] = isCommand ? text.split(' ').slice(1) : null
+					const command = isCommand ? { args, trigger } : null
 
-					const trigger = isCommand ? text.split(' ')[0] : undefined
-					const args: string[] = isCommand ? messageResponse.map((part) => part.text) : []
-					args.shift()
-
-					const addProperties = {
-						command: {
-							args,
-							trigger
-						},
-						message: {
-							hasLink,
-							text
-						}
-					}
+					const addProperties = { command, message }
 					this.emit(response.event, { ...response.data, ...addProperties }, channelid)
 				} else this.emit(response.event, response.data, channelid)
 			}
@@ -130,11 +122,11 @@ class ChatService extends EventEmitter {
 			this.emit('error', error, channelid)
 		})
 
-		this.socket.get(channelid).on('close', () => {
+		this.socket.get(channelid).once('close', (data) => {
 			this.close(channelid, this.autoReconnect.get(channelid))
 
 			if (!this.listener.get(channelid) || this.autoReconnect.get(channelid)) return
-			else this.emit('closed', channelid)
+			else this.emit('closed', channelid, data)
 		})
 	}
 

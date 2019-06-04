@@ -6,7 +6,7 @@ const client = new Client({
 
 const constellation = client.constellationService
 
-client.subscribeTo('channel:32755539:update')
+client.subscribeTo('channel:21025112:update')
 
 constellation.on('subscribe', console.log)
 
