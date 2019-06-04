@@ -67,7 +67,7 @@ constellation.on('warning', (data) => {
 })
 
 constellation.on('reply', (data) => {
-	if (data.error && data.error.code === 4106 && data.data.id === 42) {
+	if (data.error && data.error.code === 4106) {
 		console.log('An expected error occurred... (Not Found Event)')
 		client.subscribeTo('channel:529479:update')
 		client.subscribeTo('channel:529479:update')

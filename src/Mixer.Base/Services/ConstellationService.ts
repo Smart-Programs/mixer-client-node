@@ -4,8 +4,8 @@ import * as WebSocket from 'ws'
 class ConstellationService extends EventEmitter {
 	private socket: WebSocket
 	private events: string[] = []
-	private subscribingTo: string[] = []
-	private unsubscribingTo: string[] = []
+	private subscribingTo: { number?: string[] } = {}
+	private unsubscribingTo: { number?: string[] } = {}
 	private currentId: number = 0
 
 	constructor (private clientid: string) {
@@ -63,25 +63,23 @@ class ConstellationService extends EventEmitter {
 			if (data.event === 'hello') return this.emit('open', data.data)
 
 			if (data.type === 'reply') {
-				if (this.subIds.includes(data.id)) {
-					this.subIds = this.subIds.slice(this.subIds.indexOf(data.id))
-					const oldRecent = this.subscribingTo
-					this.subscribingTo = []
-					if (data.error) this.emit(data.type, { result: data.result, error: data.error, data })
+				if (data.id in this.subscribingTo) {
+					const events = this.subscribingTo[data.id]
+					delete this.subscribingTo[data.id]
+					if (data.error) this.emit(data.type, { result: data.result, error: data.error, events })
 					else {
 						// subscribe success
-						this.events = [ ...this.events, ...oldRecent ]
-						this.emit('subscribe', { events: oldRecent })
+						this.events = [ ...this.events, ...events ]
+						this.emit('subscribe', { events })
 					}
-				} else if (this.unSubIds.includes(data.id)) {
-					this.unSubIds = this.unSubIds.slice(this.unSubIds.indexOf(data.id))
-					const oldRecent = this.unsubscribingTo
-					this.unsubscribingTo = []
-					if (data.error) this.emit(data.type, { result: data.result, error: data.error, data })
+				} else if (data.id in this.unsubscribingTo) {
+					const events = this.unsubscribingTo[data.id]
+					delete this.unsubscribingTo[data.id]
+					if (data.error) this.emit(data.type, { result: data.result, error: data.error, events })
 					else {
 						// unsubscribe success
-						this.events = this.events.filter((event) => !oldRecent.includes(event))
-						this.emit('unsubscribe', { events: oldRecent })
+						this.events = this.events.filter((event) => !events.includes(event))
+						this.emit('unsubscribe', { events })
 					}
 				} else {
 					this.emit(data.type, { result: data.result, error: data.error, data })
@@ -121,7 +119,6 @@ class ConstellationService extends EventEmitter {
 	 * Subscribe to an event
 	 * Emits a subscribe event if successful
 	 */
-	private subIds: number[] = []
 	public subscribe (event: string | string[]) {
 		if (this.socket.readyState !== 1) {
 			this.once('open', () => {
@@ -130,13 +127,20 @@ class ConstellationService extends EventEmitter {
 		} else {
 			event = typeof event === 'string' ? [ event ] : event
 			const originalEvents = event
-			event = event.filter((name) => this.events.indexOf(name) === -1 && this.subscribingTo.indexOf(name) === -1)
+			event = event.filter((name) => {
+				if (this.events.includes(name)) return false
+				else {
+					for (const id in this.subscribingTo) {
+						if (this.subscribingTo.hasOwnProperty(id) && this.subscribingTo[id].includes(name)) return false
+					}
+					return true
+				}
+			})
 
 			if (event.length > 0) {
 				this.currentId += 1
 				const id = this.currentId
-				this.subIds.push(id)
-				this.subscribingTo = [ ...this.subscribingTo, ...event ]
+				this.subscribingTo[id] = event
 				this.sendPacket('livesubscribe', { events: event }, id)
 			} else {
 				this.emit('warning', {
@@ -154,16 +158,14 @@ class ConstellationService extends EventEmitter {
 	 * UbSubscribe to an event
 	 * Emits an unsubscribe event if successful
 	 */
-	private unSubIds: number[] = []
 	public unsubscribe (event: string | string[]) {
 		event = typeof event === 'string' ? [ event ] : event
-		event = event.filter((name) => this.events.indexOf(name) !== -1)
+		event = event.filter((name) => this.events.includes(name))
 
 		if (event.length > 0) {
 			this.currentId += 1
 			const id = this.currentId
-			this.unSubIds.push(id)
-			this.unsubscribingTo = [ ...this.unsubscribingTo, ...event ]
+			this.unsubscribingTo[id] = event
 			this.sendPacket('liveunsubscribe', { events: event }, id)
 		} else {
 			this.emit('warning', {
