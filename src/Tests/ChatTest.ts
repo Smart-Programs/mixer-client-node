@@ -62,8 +62,19 @@ chat.on('reply', (error, data, id) => {
 		} else if (data.id === 103) {
 			console.log('We successfully cleared the chat...')
 
-			console.log('All test were completed successfully...')
-			process.exit(0)
+			console.log('Attempting to leave all the chats...')
+			client.closeChat(529479)
+			client.closeChat(22984210)
+
+			if (client.connectedChannels.length === 0) {
+				console.log('We successfully left all chats...')
+
+				console.log('All test were completed successfully...')
+				process.exit(0)
+			} else {
+				console.log('We did not close the chats correctly...')
+				process.exit(1)
+			}
 		} else {
 			console.log(data, id)
 		}

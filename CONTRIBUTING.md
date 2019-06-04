@@ -7,4 +7,4 @@ Make sure that any code you add still passes the testing we have setup by runnin
     npm test
 
 ## Pull Requests
-When sumbitting the pull request please add a description with why you made the changes you did and what you think the changes will improve on.
+When submitting the pull request please add a description with why you made the changes you did and what you think the changes will improve on.
