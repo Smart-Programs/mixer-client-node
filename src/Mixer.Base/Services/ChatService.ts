@@ -18,7 +18,7 @@ class ChatService extends EventEmitter {
 	/*
 	 * Join a chat
 	 */
-	public join (userid: number, channelid: number, autoReconnect?: boolean): Promise<any> {
+	public join (userid: number, channelid: number, autoReconnect: boolean = false): Promise<any> {
 		return new Promise((resolve, deny) => {
 			if (!this.client.user || userid !== this.client.user.userid) {
 				let id: number
@@ -57,7 +57,7 @@ class ChatService extends EventEmitter {
 							message: 'You must be authenticated to connect to a chat!'
 						})
 					} else {
-						this.autoReconnect.set(channelid, autoReconnect || false)
+						this.autoReconnect.set(channelid, autoReconnect)
 						this.socket.set(channelid, new WebSocket(response.endpoints[0]))
 						this.hookEventListeners(channelid, response.authkey)
 						resolve(this.socket.get(channelid))
@@ -71,7 +71,7 @@ class ChatService extends EventEmitter {
 	 * Ping the chat socket to not disconnect
 	 */
 	private timeout: NodeJS.Timeout
-	private pingId = 0
+	private pingId: number
 	private ping (channelid: number) {
 		if (this.timeout) clearTimeout(this.timeout)
 
@@ -101,8 +101,8 @@ class ChatService extends EventEmitter {
 
 			const response: { [key: string]: any } = JSON.parse(data.data)
 			if (response.type === 'reply') {
-				if (response.hasOwnProperty('authenticated')) {
-					if (response.authenticated) {
+				if (response.data.hasOwnProperty('authenticated')) {
+					if (response.data.authenticated) {
 						this.emit('joined', { connectedTo: channelid, userConnected: this.client.user.userid })
 					} else {
 						this.close(channelid, false)
@@ -139,11 +139,11 @@ class ChatService extends EventEmitter {
 					const command = isCommand ? { args, trigger } : null
 
 					const isSkill = meta.is_skill ? true : false
-					const skillType = meta.skill.currency
-					const skillCost = meta.skill.cost
-					const skillImage = meta.skill.icon_url
-					const skillName = meta.skill.skill_name
-					const skillId = meta.skill.skill_id
+					const skillType = isSkill ? meta.skill.currency : null
+					const skillCost = isSkill ? meta.skill.cost : null
+					const skillImage = isSkill ? meta.skill.icon_url : null
+					const skillName = isSkill ? meta.skill.skill_name : null
+					const skillId = isSkill ? meta.skill.skill_id : null
 					const skill = isSkill
 						? { type: skillType, cost: skillCost, image: skillImage, name: skillName, id: skillId }
 						: null
