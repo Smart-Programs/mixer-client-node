@@ -13,7 +13,7 @@ const client = new Client({
 
 const chat = client.chatService
 
-client.joinChat()
+client.joinChat(true)
 
 chat.on('joined', () => console.log('We successfully connected to chat'))
 

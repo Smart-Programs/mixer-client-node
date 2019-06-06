@@ -68,6 +68,24 @@ class ChatService extends EventEmitter {
 	}
 
 	/*
+	 * Ping the chat socket to not disconnect
+	 */
+	private timeout: NodeJS.Timeout
+	private pingId = 0
+	private ping (channelid: number) {
+		if (this.timeout) clearTimeout(this.timeout)
+
+		this.timeout = setTimeout(() => {
+			if (this.socket.get(channelid).readyState !== 1) this.emit('error', { socket: 'Closed', from: 'Ping' })
+			else {
+				if (this.currentId > 100000000) this.currentId = 0
+				this.pingId = ++this.currentId
+				this.sendPacket('ping', null, channelid, this.pingId)
+			}
+		}, 1000 * 60)
+	}
+
+	/*
 	 * Setup the event listeners for the sockets
 	 */
 	private hookEventListeners (channelid: number, authkey: string) {
@@ -75,58 +93,78 @@ class ChatService extends EventEmitter {
 
 		this.socket.get(channelid).once('open', () => {
 			this.sendPacket('auth', [ channelid, this.client.user.userid, authkey ], channelid)
+			this.ping(channelid)
 		})
 
-		this.socket.get(channelid).on('message', (response: any) => {
+		this.socket.get(channelid).addEventListener('message', (data) => {
 			if (!this.listener.get(channelid) || this.eventNames().length === 0) return
 
-			response = JSON.parse(response)
+			const response: { [key: string]: any } = JSON.parse(data.data)
 			if (response.type === 'reply') {
-				if (response.data.authenticated === false) {
-					this.close(channelid, false)
-					this.emit(
-						'error',
-						{
-							code: 401,
-							error: 'Not Authenticated',
-							id: 2,
-							message: 'You must be authenticated to connect to a chat!'
-						},
-						channelid
-					)
-				} else {
-					if (response.data && response.data.authenticated)
+				if (response.hasOwnProperty('authenticated')) {
+					if (response.authenticated) {
 						this.emit('joined', { connectedTo: channelid, userConnected: this.client.user.userid })
+					} else {
+						this.close(channelid, false)
+						this.emit(
+							'error',
+							{
+								code: 401,
+								error: 'Not Authenticated',
+								id: 2,
+								message: 'You must be authenticated to connect to a chat!'
+							},
+							channelid
+						)
+					}
+				} else {
+					if (response.id === this.pingId) this.ping(channelid)
 					else this.emit(response.type, response.error, response.data, channelid)
 				}
 			} else {
 				if (response.event === 'ChatMessage') {
+					const meta = response.data.message.meta
+
 					const messageResponse = response.data.message.message
 					const hasLink = messageResponse.filter((part) => part.type === 'link').length > 0
+					const isWhisper = meta.whisper ? true : false
+					const isCensored = meta.censored ? true : false
 					const text: string = messageResponse.map((part) => part.text).join('').trim()
-					const message = { hasLink, text }
+					const tags = messageResponse.filter((part) => part.type === 'tag').map((tag) => tag.username)
+					const message = { hasLink, text, tags, isWhisper, isCensored }
 
 					const isCommand = text.startsWith('!')
 					const trigger = isCommand ? text.split(' ')[0] : null
 					const args: string[] = isCommand ? text.split(' ').slice(1) : null
 					const command = isCommand ? { args, trigger } : null
 
-					const addProperties = { command, message }
+					const isSkill = meta.is_skill ? true : false
+					const skillType = meta.skill.currency
+					const skillCost = meta.skill.cost
+					const skillImage = meta.skill.icon_url
+					const skillName = meta.skill.skill_name
+					const skillId = meta.skill.skill_id
+					const skill = isSkill
+						? { type: skillType, cost: skillCost, image: skillImage, name: skillName, id: skillId }
+						: null
+
+					const addProperties = { command, message, skill }
+
 					this.emit(response.event, { ...response.data, ...addProperties }, channelid)
 				} else this.emit(response.event, response.data, channelid)
 			}
 		})
 
-		this.socket.get(channelid).on('error', (error) => {
+		this.socket.get(channelid).addEventListener('error', (error) => {
 			if (!this.listener.get(channelid) || this.listenerCount('error') === 0) return
-			this.emit('error', error, channelid)
+			this.emit('error', { error: error.error, message: error.message }, channelid)
 		})
 
-		this.socket.get(channelid).once('close', (data) => {
+		this.socket.get(channelid).addEventListener('close', (data) => {
 			this.close(channelid, this.autoReconnect.get(channelid))
 
-			if (!this.listener.get(channelid) || this.autoReconnect.get(channelid)) return
-			else this.emit('closed', channelid, data)
+			if (this.listener.get(channelid) && !this.autoReconnect.get(channelid))
+				this.emit('closed', channelid, { code: data.code, reason: data.reason })
 		})
 	}
 
@@ -168,14 +206,35 @@ class ChatService extends EventEmitter {
 			method,
 			type: 'method'
 		}
-		if (this.socket.get(channelid) && this.socket.get(channelid).readyState === 1) {
-			this.socket.get(channelid).send(JSON.stringify(packet))
+		if (this.socket.get(channelid)) {
+			if (this.socket.get(channelid).readyState === 1) this.socket.get(channelid).send(JSON.stringify(packet))
+			else {
+				this.emit('warning', {
+					channelid,
+					code: 1000,
+					id: 3,
+					packet: {
+						args,
+						channelid,
+						id,
+						method
+					},
+					reason: 'Socket is Closed',
+					warning: "Can't Send Packet"
+				})
+			}
 		} else {
 			this.emit('warning', {
 				channelid,
 				code: 1000,
 				id: 1,
-				reason: 'Socket Closed or No Socket Found',
+				packet: {
+					args,
+					channelid,
+					id,
+					method
+				},
+				reason: 'No Socket Found',
 				warning: "Can't Send Packet"
 			})
 		}
@@ -206,8 +265,7 @@ class ChatService extends EventEmitter {
 				getPart()
 			} else {
 				if (message) {
-					this.currentId += 1
-					this.sendPacket('msg', [ message ], channelid, this.currentId)
+					this.sendPacket('msg', [ message ], channelid, ++this.currentId)
 				} else {
 					this.emit('warning', {
 						code: 1000,
@@ -256,8 +314,7 @@ class ChatService extends EventEmitter {
 				getPart()
 			} else {
 				if (sendToUser && message) {
-					this.currentId += 1
-					this.sendPacket('whisper', [ sendToUser, message ], channelid, this.currentId)
+					this.sendPacket('whisper', [ sendToUser, message ], channelid, ++this.currentId)
 				} else {
 					this.emit('warning', {
 						code: 1000,
@@ -283,8 +340,7 @@ class ChatService extends EventEmitter {
 	public deleteMessage (messageID: string, channelid = this.socket.size === 1 ? this.socket.keys().next().value : 0) {
 		if (this.socket.get(channelid)) {
 			if (messageID) {
-				this.currentId += 1
-				this.sendPacket('timeout', [ messageID ], channelid, this.currentId)
+				this.sendPacket('timeout', [ messageID ], channelid, ++this.currentId)
 			} else {
 				this.emit('warning', {
 					code: 1000,
@@ -308,8 +364,7 @@ class ChatService extends EventEmitter {
 	 */
 	public clearChat (channelid = this.socket.size === 1 ? this.socket.keys().next().value : 0) {
 		if (this.socket.get(channelid)) {
-			this.currentId += 1
-			this.sendPacket('clearMessages', [], channelid, this.currentId)
+			this.sendPacket('clearMessages', [], channelid, ++this.currentId)
 		} else {
 			this.emit('warning', {
 				code: 1000,
@@ -330,8 +385,7 @@ class ChatService extends EventEmitter {
 	) {
 		if (this.socket.get(channelid)) {
 			if (username && time) {
-				this.currentId += 1
-				this.sendPacket('timeout', [ username, time ], channelid, this.currentId)
+				this.sendPacket('timeout', [ username, time ], channelid, ++this.currentId)
 			} else {
 				this.emit('warning', {
 					code: 1000,
@@ -356,8 +410,7 @@ class ChatService extends EventEmitter {
 	public purgeUser (username: string, channelid = this.socket.size === 1 ? this.socket.keys().next().value : 0) {
 		if (this.socket.get(channelid)) {
 			if (username) {
-				this.currentId += 1
-				this.sendPacket('purge', [ username ], channelid, this.currentId)
+				this.sendPacket('purge', [ username ], channelid, ++this.currentId)
 			} else {
 				this.emit('warning', {
 					code: 1000,

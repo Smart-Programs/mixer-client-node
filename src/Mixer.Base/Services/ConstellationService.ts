@@ -20,6 +20,8 @@ class ConstellationService extends EventEmitter {
 	private createSocket () {
 		this.currentId = 0
 
+		if (this.socket && this.socket.readyState === 1) this.socket.terminate()
+
 		this.socket = new WebSocket('wss://constellation.mixer.com', 'cnstl-gzip', {
 			headers: {
 				'client-id': this.clientid,
@@ -35,6 +37,26 @@ class ConstellationService extends EventEmitter {
 
 			this.subscribe(subTo)
 		}
+
+		this.ping()
+	}
+
+	/*
+	 * Ping the chat to fix disconnect issues
+	 */
+	private timeout: NodeJS.Timeout
+	private pingId = 0
+	private ping () {
+		if (this.timeout) clearTimeout(this.timeout)
+
+		this.timeout = setTimeout(() => {
+			if (this.socket.readyState !== 1) this.emit('error', { socket: 'Closed', from: 'Ping' })
+			else {
+				if (this.currentId > 100000000) this.currentId = 0
+				this.pingId = ++this.currentId
+				this.sendPacket('ping', null, this.pingId)
+			}
+		}, 1000 * 60)
 	}
 
 	/*
@@ -49,9 +71,9 @@ class ConstellationService extends EventEmitter {
 	 * Setup the socket event listener to emit events
 	 */
 	private eventListener () {
-		this.socket.addEventListener('error', (err) => this.emit('error', err))
+		this.socket.addEventListener('error', (err) => this.emit('error', { error: err.error, message: err.message }))
 		this.socket.addEventListener('close', (data) => {
-			this.emit('error', { socket: 'Closed', response: data })
+			this.emit('error', { socket: 'Closed', closeCode: data.code, reason: data.reason })
 			setTimeout(() => {
 				this.createSocket()
 			}, 500)
@@ -81,9 +103,10 @@ class ConstellationService extends EventEmitter {
 						this.events = this.events.filter((event) => !events.includes(event))
 						this.emit('unsubscribe', { events })
 					}
-				} else {
-					this.emit(data.type, { result: data.result, error: data.error, data })
-				}
+				} else if (data.id === this.pingId) {
+					if (data.error) this.createSocket()
+					else this.ping()
+				} else this.emit(data.type, data)
 			} else if (data.data && data.data.payload) {
 				this.emit(data.type, data.data.payload, data.data.channel)
 			} else {
