@@ -10,7 +10,7 @@ export interface IAuthTokens {
 }
 
 export function refreshAuth (client: Client) {
-	return new Promise((resolve, reject) => {
+	return new Promise(async (resolve, reject) => {
 		if (!client.refreshToken) {
 			return reject({
 				error: 'Invalid Request',
@@ -32,24 +32,22 @@ export function refreshAuth (client: Client) {
 			uri: OAUTH_BASE_URL + '/token'
 		}
 
-		client
-			.request(options)
-			.then((response: IRefreshAuthResponse) => {
-				client.tokens = {
-					access: response.access_token,
-					expires: (Date.now() + 1000 * response.expires_in) / 1000,
-					refresh: response.refresh_token
-				}
-				resolve(response)
-			})
-			.catch((error) => {
-				reject(error)
-			})
+		try {
+			const response = (await client.request(options)) as IRefreshAuthResponse
+			client.tokens = {
+				access: response.access_token,
+				expires: (Date.now() + 1000 * response.expires_in) / 1000,
+				refresh: response.refresh_token
+			}
+			resolve(response)
+		} catch (error) {
+			reject(error)
+		}
 	})
 }
 
 export function validateToken (client: Client, token: string) {
-	return new Promise((resolve, reject) => {
+	return new Promise(async (resolve, reject) => {
 		const options: IRequestOptions = {
 			body: {
 				token
@@ -58,33 +56,33 @@ export function validateToken (client: Client, token: string) {
 			uri: OAUTH_BASE_URL + '/token/introspect'
 		}
 
-		client
-			.request(options)
-			.then((response: IValidateTokenResponse) => {
-				if (response.active) {
-					if (response.token_type === 'access_token' && token === client.accessToken) {
-						client.tokens = {
-							access: client.accessToken,
-							expires: response.exp,
-							refresh: client.refreshToken
-						}
-
-						client.user = {
-							channelid: client.user.channelid,
-							userid: response.sub
-						}
-
-						client.clientid = response.client_id
+		try {
+			const response = (await client.request(options)) as IValidateTokenResponse
+			if (response.active) {
+				if (response.token_type === 'access_token' && token === client.accessToken) {
+					client.tokens = {
+						access: client.accessToken,
+						expires: response.exp,
+						refresh: client.refreshToken
 					}
-					resolve(response)
-				} else {
-					reject({
-						error: 'Token is not active',
-						statusCode: 401
-					})
+
+					client.user = {
+						channelid: client.user.channelid,
+						userid: response.sub
+					}
+
+					client.clientid = response.client_id
 				}
-			})
-			.catch(reject)
+				resolve(response)
+			} else {
+				reject({
+					error: 'Token is not active',
+					statusCode: 401
+				})
+			}
+		} catch (error) {
+			reject(error)
+		}
 	})
 }
 

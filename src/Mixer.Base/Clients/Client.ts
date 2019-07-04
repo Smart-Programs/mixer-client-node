@@ -116,28 +116,26 @@ export class Client {
 		useridOrReconnect?: number | boolean,
 		autoReconnect = false
 	): Promise<any> {
-		return new Promise((resolve, deny) => {
-			let channelid: number
-			let userid: number
-			let reconnect: boolean
+		let channelid: number
+		let userid: number
+		let reconnect: boolean
 
-			if (typeof channelidOrReconnect === 'number') {
-				channelid = channelidOrReconnect
-				if (typeof useridOrReconnect === 'number') {
-					userid = useridOrReconnect
-					reconnect = autoReconnect
-				} else {
-					userid = this.user.userid
-					reconnect = typeof useridOrReconnect === 'boolean' ? useridOrReconnect : false
-				}
-			} else if (this.user) {
-				channelid = this.user.channelid
+		if (typeof channelidOrReconnect === 'number') {
+			channelid = channelidOrReconnect
+			if (typeof useridOrReconnect === 'number') {
+				userid = useridOrReconnect
+				reconnect = autoReconnect
+			} else {
 				userid = this.user.userid
-				reconnect = typeof channelidOrReconnect === 'boolean' ? channelidOrReconnect : false
+				reconnect = typeof useridOrReconnect === 'boolean' ? useridOrReconnect : false
 			}
+		} else if (this.user) {
+			channelid = this.user.channelid
+			userid = this.user.userid
+			reconnect = typeof channelidOrReconnect === 'boolean' ? channelidOrReconnect : false
+		}
 
-			this.chatService.join(userid, channelid, reconnect).then(resolve).catch(deny)
-		})
+		return this.chatService.join(userid, channelid, reconnect)
 	}
 
 	public get connectedChannels (): number[] {

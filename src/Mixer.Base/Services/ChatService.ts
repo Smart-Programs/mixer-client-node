@@ -2,6 +2,7 @@ import { IRequestOptions } from '../Util/RequestHandler'
 import { EventEmitter } from 'events'
 import { Client } from '../Clients/Client'
 import WebSocket = require('ws')
+import { mergeDeep, toJSON } from '../Util/HelperFunctions'
 
 class ChatService extends EventEmitter {
 	private autoReconnect = new Map<number, boolean>()
@@ -18,8 +19,8 @@ class ChatService extends EventEmitter {
 	/*
 	 * Join a chat
 	 */
-	public join (userid: number, channelid: number, autoReconnect: boolean = false): Promise<any> {
-		return new Promise((resolve, deny) => {
+	public join (userid: number, channelid: number, autoReconnect: boolean = false): Promise<WebSocket> {
+		return new Promise(async (resolve, deny) => {
 			if (!this.client.user || userid !== this.client.user.userid) {
 				let id: number
 				if (this.client.user) id = this.client.user.channelid
@@ -31,39 +32,41 @@ class ChatService extends EventEmitter {
 
 			if (this.socket.get(channelid)) this.close(channelid, false)
 
-			this.connectTheChat(channelid, autoReconnect).then(resolve).catch((err) => {
-				if (this.listenerCount('error') === 0) deny(err)
-				else this.emit('error', err, channelid)
-			})
+			try {
+				resolve(await this.connectTheChat(channelid, autoReconnect))
+			} catch (error) {
+				if (this.listenerCount('error') === 0) deny(error)
+				else this.emit('error', error, channelid)
+			}
 		})
 	}
 
-	private connectTheChat (channelid: number, autoReconnect: boolean) {
-		return new Promise((resolve, deny) => {
+	private connectTheChat (channelid: number, autoReconnect: boolean): Promise<WebSocket> {
+		return new Promise(async (resolve, deny) => {
 			const chatRequest: IRequestOptions = {
 				auth: true,
 				method: 'GET',
 				uri: 'https://mixer.com/api/v1/chats/' + channelid
 			}
 
-			this.client
-				.request(chatRequest)
-				.then((response: IChatResponse) => {
-					if (!response.authkey) {
-						deny({
-							code: 401,
-							error: 'Not Authenticated',
-							id: 1,
-							message: 'You must be authenticated to connect to a chat!'
-						})
-					} else {
-						this.autoReconnect.set(channelid, autoReconnect)
-						this.socket.set(channelid, new WebSocket(response.endpoints[0]))
-						this.hookEventListeners(channelid, response.authkey)
-						resolve(this.socket.get(channelid))
-					}
-				})
-				.catch(deny)
+			try {
+				const response = await this.client.request(chatRequest)
+				if (!response.authkey) {
+					deny({
+						code: 401,
+						error: 'Not Authenticated',
+						id: 1,
+						message: 'You must be authenticated to connect to a chat!'
+					})
+				} else {
+					this.autoReconnect.set(channelid, autoReconnect)
+					this.socket.set(channelid, new WebSocket(response.endpoints[0]))
+					this.hookEventListeners(channelid, response.authkey)
+					resolve(this.socket.get(channelid))
+				}
+			} catch (error) {
+				deny(error)
+			}
 		})
 	}
 
@@ -99,9 +102,9 @@ class ChatService extends EventEmitter {
 		this.socket.get(channelid).addEventListener('message', (data) => {
 			if (!this.listener.get(channelid) || this.eventNames().length === 0) return
 
-			const response: { [key: string]: any } = JSON.parse(data.data)
+			const response: { [key: string]: any } = toJSON(data.data)
 			if (response.type === 'reply') {
-				if (response.data.hasOwnProperty('authenticated')) {
+				if (response.data && response.data.hasOwnProperty('authenticated')) {
 					if (response.data.authenticated) {
 						this.emit('joined', { connectedTo: channelid, userConnected: this.client.user.userid })
 					} else {
@@ -123,34 +126,40 @@ class ChatService extends EventEmitter {
 				}
 			} else {
 				if (response.event === 'ChatMessage') {
-					const meta = response.data.message.meta
-
+					const messageMeta = response.data.message.meta
 					const messageResponse = response.data.message.message
 					const hasLink = messageResponse.filter((part) => part.type === 'link').length > 0
-					const isWhisper = meta.whisper ? true : false
-					const isCensored = meta.censored ? true : false
-					const text: string = messageResponse.map((part) => part.text).join('').trim()
+					const isWhisper = messageMeta.whisper ? true : false
+					const text: string = messageResponse.map((part) => part.text).join('').replace(/\r?\n|\r/g, '').trim()
 					const tags = messageResponse.filter((part) => part.type === 'tag').map((tag) => tag.username)
-					const message = { hasLink, text, tags, isWhisper, isCensored }
+					const message = { hasLink, text, tags, isWhisper }
 
 					const isCommand = text.startsWith('!')
-					const trigger = isCommand ? text.split(' ')[0] : null
-					const args: string[] = isCommand ? text.split(' ').slice(1) : null
-					const command = isCommand ? { args, trigger } : null
+					const trigger = isCommand ? text.split(' ')[0] : undefined
+					const args: string[] = isCommand ? text.split(' ').slice(1) : undefined
+					const command = isCommand ? { args, trigger } : undefined
 
-					const isSkill = meta.is_skill ? true : false
-					const skillType = isSkill ? meta.skill.currency : null
-					const skillCost = isSkill ? meta.skill.cost : null
-					const skillImage = isSkill ? meta.skill.icon_url : null
-					const skillName = isSkill ? meta.skill.skill_name : null
-					const skillId = isSkill ? meta.skill.skill_id : null
+					const isSkill = messageMeta.is_skill ? true : false
+					const skillType = isSkill ? messageMeta.skill.currency : undefined
+					const skillCost = isSkill ? messageMeta.skill.cost : undefined
+					const skillImage = isSkill ? messageMeta.skill.icon_url : undefined
+					const skillName = isSkill ? messageMeta.skill.skill_name : undefined
+					const skillId = isSkill ? messageMeta.skill.skill_id : undefined
+					const skillMessage = isSkill ? text.replace(skillName, '') : undefined
 					const skill = isSkill
-						? { type: skillType, cost: skillCost, image: skillImage, name: skillName, id: skillId }
-						: null
+						? {
+								cost: skillCost,
+								id: skillId,
+								image: skillImage,
+								message: skillMessage,
+								name: skillName,
+								type: skillType
+							}
+						: undefined
 
 					const addProperties = { command, message, skill }
 
-					this.emit(response.event, { ...response.data, ...addProperties }, channelid)
+					this.emit(response.event, mergeDeep(response.data, addProperties), channelid)
 				} else this.emit(response.event, response.data, channelid)
 			}
 		})

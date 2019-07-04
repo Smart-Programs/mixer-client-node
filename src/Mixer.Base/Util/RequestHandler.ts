@@ -4,7 +4,7 @@ import errors = require('request-promise/errors')
 
 export function requestAPI (opts: IRequestOptions) {
 	return new Promise((resolve, reject) => {
-		const { ['auth']: omit, ...options } = opts
+		const { auth, ...options } = opts
 
 		request(options)
 			.then(resolve)

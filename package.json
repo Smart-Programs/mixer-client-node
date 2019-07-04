@@ -32,6 +32,7 @@
 		"url": "https://github.com/Smart-Programs/mixer-client-node.git"
 	},
 	"scripts": {
+		"auto": "tsc && node dist/Tests/AutoHostTest.js",
 		"build": "npm install && rimraf dist && tsc --declaration",
 		"chat": "tsc && node dist/Tests/ChatTest.js",
 		"ch": "tsc && node dist/Tests/LongChatTest.js",

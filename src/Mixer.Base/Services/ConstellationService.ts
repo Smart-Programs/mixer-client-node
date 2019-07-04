@@ -1,12 +1,13 @@
 import { EventEmitter } from 'events'
 import * as WebSocket from 'ws'
+import { toJSON } from '../Util/HelperFunctions'
 
 class ConstellationService extends EventEmitter {
 	private socket: WebSocket
 	private events: string[] = []
 	private subscribingTo: { number?: string[] } = {}
 	private unsubscribingTo: { number?: string[] } = {}
-	private currentId: number = 0
+	private currentId = 0
 
 	constructor (private clientid: string) {
 		super()
@@ -37,8 +38,6 @@ class ConstellationService extends EventEmitter {
 
 			this.subscribe(subTo)
 		}
-
-		this.ping()
 	}
 
 	/*
@@ -47,16 +46,19 @@ class ConstellationService extends EventEmitter {
 	private timeout: NodeJS.Timeout
 	private pingId = 0
 	private ping () {
-		if (this.timeout) clearTimeout(this.timeout)
+		// Send ping every 5 minutes to ensure the connection is solid
+		setTimeout(() => this.sendPing, 1000 * 5)
 
-		this.timeout = setTimeout(() => {
-			if (this.socket.readyState !== 1) this.emit('error', { socket: 'Closed', from: 'Ping' })
-			else {
-				if (this.currentId > 100000000) this.currentId = 0
-				this.pingId = ++this.currentId
-				this.sendPacket('ping', null, this.pingId)
-			}
-		}, 1000 * 60)
+		if (this.timeout) clearTimeout(this.timeout)
+		// If the ping does not get responded too in 1 second restart the socket
+		this.timeout = setTimeout(() => this.createSocket, 1000)
+	}
+
+	private sendPing () {
+		if (this.socket.readyState !== 1) return
+		if (this.currentId > 100000000) this.currentId = 0
+		this.pingId = ++this.currentId
+		this.sendPacket('ping', null, this.pingId)
 	}
 
 	/*
@@ -71,16 +73,24 @@ class ConstellationService extends EventEmitter {
 	 * Setup the socket event listener to emit events
 	 */
 	private eventListener () {
-		this.socket.addEventListener('error', (err) => this.emit('error', { error: err.error, message: err.message }))
-		this.socket.addEventListener('close', (data) => {
-			this.emit('error', { socket: 'Closed', closeCode: data.code, reason: data.reason })
-			setTimeout(() => {
-				this.createSocket()
-			}, 500)
+		this.socket.once('open', this.ping)
+
+		this.socket.addEventListener('error', ({ error, message }) => this.emit('error', { error, message }))
+
+		this.socket.addEventListener('close', ({ code, reason }) => {
+			this.emit('error', { socket: 'Closed', code, reason, autoReconnecting: true })
+			setTimeout(() => this.createSocket(), 500)
 		})
 
-		this.socket.addEventListener('message', (data: any) => {
-			data = JSON.parse(data.data)
+		this.socket.addEventListener('message', ({ data: response }) => {
+			const data: {
+				data: any
+				event?: string
+				type: 'reply' | 'event'
+				id: number
+				error?: any
+				result?: any
+			} = toJSON(response) as any
 
 			if (data.event === 'hello') return this.emit('open', data.data)
 
@@ -161,8 +171,7 @@ class ConstellationService extends EventEmitter {
 			})
 
 			if (event.length > 0) {
-				this.currentId += 1
-				const id = this.currentId
+				const id = ++this.currentId
 				this.subscribingTo[id] = event
 				this.sendPacket('livesubscribe', { events: event }, id)
 			} else {
@@ -185,12 +194,16 @@ class ConstellationService extends EventEmitter {
 		event = typeof event === 'string' ? [ event ] : event
 		event = event.filter((name) => this.events.includes(name))
 
-		if (event.length > 0) {
-			this.currentId += 1
-			const id = this.currentId
-			this.unsubscribingTo[id] = event
-			this.sendPacket('liveunsubscribe', { events: event }, id)
-		} else {
+		if (event.length > 0 && this.socket.readyState !== 1) {
+			this.createSocket()
+			this.emit('error', {
+				code: 404,
+				events: event,
+				id: 1,
+				reason: 'The socket was closed',
+				warning: "Can't Send Packet"
+			})
+		} else if (event.length === 0) {
 			this.emit('warning', {
 				code: 2000,
 				events: event,
@@ -198,6 +211,10 @@ class ConstellationService extends EventEmitter {
 				reason: 'You are not subscribed to any of the events you listed to unsubscribe to',
 				warning: "Can't Send Packet"
 			})
+		} else {
+			const id = ++this.currentId
+			this.unsubscribingTo[id] = event
+			this.sendPacket('liveunsubscribe', { events: event }, id)
 		}
 	}
 }
