@@ -69,7 +69,7 @@ export class Client {
 	}
 
 	public get didExpire (): boolean {
-		if (this.expires) return this.expires * 1000 >= Date.now()
+		if (this.expires) return this.expires * 1000 <= Date.now()
 		else return true
 	}
 
