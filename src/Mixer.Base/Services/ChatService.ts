@@ -79,13 +79,13 @@ class ChatService extends EventEmitter {
 		if (this.timeout) clearTimeout(this.timeout)
 
 		this.timeout = setTimeout(() => {
-			if (!this.socket.get(channelid)) return
-
-			if (this.socket.get(channelid).readyState !== 1) this.emit('error', { socket: 'Closed', from: 'Ping' })
-			else {
-				if (this.currentId > 100000000) this.currentId = 0
-				this.pingId = ++this.currentId
-				this.sendPacket('ping', null, channelid, this.pingId)
+			if (this.socket.get(channelid)) {
+				if (this.socket.get(channelid).readyState !== 1) this.emit('error', { socket: 'Closed', from: 'Ping' })
+				else {
+					if (this.currentId > 100000000) this.currentId = 0
+					this.pingId = ++this.currentId
+					this.sendPacket('ping', null, channelid, this.pingId)
+				}
 			}
 		}, 1000 * 60)
 	}
