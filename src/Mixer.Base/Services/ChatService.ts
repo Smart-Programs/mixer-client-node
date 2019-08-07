@@ -97,7 +97,7 @@ class ChatService extends EventEmitter {
 		this.listener.set(channelid, true)
 
 		this.socket.get(channelid).once('open', () => {
-			this.sendPacket('auth', [ channelid, this.client.user.userid, authkey ], channelid)
+			this.sendPacket('auth', [ channelid, this.client.user.userid, authkey ], channelid, 0)
 			this.ping(channelid)
 		})
 
@@ -107,7 +107,7 @@ class ChatService extends EventEmitter {
 			const response: { [key: string]: any } = toJSON(data.data)
 			if (response.type === 'reply') {
 				if (response.data && response.data.hasOwnProperty('authenticated')) {
-					if (response.data.authenticated) {
+					if (response.data.authenticated === true && response.id === 0) {
 						this.emit('joined', { connectedTo: channelid, userConnected: this.client.user.userid })
 					} else {
 						this.close(channelid, false)
