@@ -9,16 +9,21 @@ export function requestAPI (opts: IRequestOptions) {
 		request(options)
 			.then(resolve)
 			.catch(errors.StatusCodeError, (reason) => {
-				if (reason.statusCode === 429) {
+				if (reason && reason.statusCode === 429) {
 					const header = +reason.response.headers['X-RateLimit-Reset']
 					const timeout = isNaN(header) ? Number(header) - Date.now().valueOf() : 3000
 					setTimeout(() => {
 						requestAPI(options)
 					}, timeout)
-				} else {
+				} else if (reason) {
 					reject({
 						error: reason.error,
 						statusCode: reason.statusCode
+					})
+				} else {
+					reject({
+						error: 'Unknown',
+						statusCode: 500
 					})
 				}
 			})
