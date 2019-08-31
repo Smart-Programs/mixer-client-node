@@ -30,7 +30,7 @@ export function requestAPI (opts: IRequestOptions) {
 			.catch(errors.RequestError, (reason) => {
 				reject({
 					error: reason.cause,
-					statusCode: reason.response.statusCode
+					statusCode: reason.response ? reason.response.statusCode : 500
 				})
 			})
 	})
