@@ -77,10 +77,7 @@ class ConstellationService extends EventEmitter {
 
 		this.socket.addEventListener('error', ({ error, message }) => this.emit('error', { error, message }))
 
-		this.socket.addEventListener('close', ({ code, reason }) => {
-			this.emit('error', { socket: 'Closed', code, reason, autoReconnecting: true })
-			setTimeout(() => this.createSocket(), 500)
-		})
+		this.socket.addEventListener('close', () => setTimeout(() => this.createSocket(), 500))
 
 		this.socket.addEventListener('message', ({ data: response }) => {
 			const data: {
