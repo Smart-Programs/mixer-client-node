@@ -11,8 +11,14 @@ class ConstellationService extends EventEmitter {
 
 	constructor (private clientid: string) {
 		super()
+	}
 
+	public start () {
 		this.createSocket()
+	}
+
+	public stop () {
+		this.socket.terminate()
 	}
 
 	/*
@@ -75,7 +81,9 @@ class ConstellationService extends EventEmitter {
 	private eventListener () {
 		this.socket.once('open', this.ping)
 
-		this.socket.addEventListener('error', ({ error, message }) => this.emit('error', { error, message }))
+		this.socket.addEventListener('error', ({ error, message }) => {
+			if (this.listenerCount('error') > 0) this.emit('error', { error, message })
+		})
 
 		this.socket.addEventListener('close', () => setTimeout(() => this.createSocket(), 500))
 
