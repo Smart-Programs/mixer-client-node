@@ -11,14 +11,8 @@ class ConstellationService extends EventEmitter {
 
 	constructor (private clientid: string) {
 		super()
-	}
 
-	public start () {
 		this.createSocket()
-	}
-
-	public stop () {
-		this.socket.terminate()
 	}
 
 	/*
