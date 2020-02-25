@@ -9,7 +9,7 @@ class ConstellationService extends EventEmitter {
     private unsubscribingTo: Map<number, { number?: string[] }> = new Map()
     private currentId: Map<number, number> = new Map()
     private subNumber = 0
-    private splitCount = 100
+    private splitCount = 2000
 
     constructor(private clientid: string) {
         super()
