@@ -1,49 +1,57 @@
 {
-	"name": "mixer-client-node",
-	"version": "2.7.10",
-	"description": "A node client for connecting to mixer and the mixer services",
-	"keywords": [ "mixer", "client", "api", "constellation", "library", "oauth", "mixer" ],
-	"homepage": "https://github.com/Smart-Programs/mixer-client-node",
-	"bugs": {
-		"url": "https://github.com/Smart-Programs/mixer-client-node/issues",
-		"email": "contact@unsmart.co"
-	},
-	"license": "MIT",
-	"author": {
-		"name": "Garret",
-		"email": "me@unsmart.co",
-		"url": "https://github.com/itsUnsmart"
-	},
-	"main": "dist/index.js",
-	"directories": {
-		"doc": "./Tutorials",
-		"test": "./dist/Tests"
-	},
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/Smart-Programs/mixer-client-node.git"
-	},
-	"scripts": {
-		"auto": "tsc && node dist/Tests/AutoHostTest.js",
-		"build": "npm install && rimraf dist && tsc --declaration",
-		"chat": "tsc && node dist/Tests/ChatTest.js",
-		"ch": "tsc && node dist/Tests/LongChatTest.js",
-		"constellation": "tsc && node dist/Tests/ConstellationTest.js",
-		"const": "tsc && node dist/Tests/LongConstTest.js",
-		"test": "npm install && npm run chat && npm run constellation"
-	},
-	"dependencies": {
-		"request": "latest",
-		"request-promise": "latest",
-		"ws": "latest"
-	},
-	"devDependencies": {
-		"@types/node": "latest",
-		"@types/request-promise": "latest",
-		"@types/ws": "latest",
-		"rimraf": "latest"
-	},
-	"publishConfig": {
-		"access": "public"
-	}
+    "name": "mixer-client-node",
+    "version": "2.8.0",
+    "description": "A node client for connecting to mixer and the mixer services",
+    "keywords": [
+        "mixer",
+        "client",
+        "api",
+        "constellation",
+        "library",
+        "oauth",
+        "mixer"
+    ],
+    "homepage": "https://github.com/Smart-Programs/mixer-client-node",
+    "bugs": {
+        "url": "https://github.com/Smart-Programs/mixer-client-node/issues",
+        "email": "contact@unsmart.co"
+    },
+    "license": "MIT",
+    "author": {
+        "name": "Garret",
+        "email": "me@unsmart.co",
+        "url": "https://github.com/itsUnsmart"
+    },
+    "main": "dist/index.js",
+    "directories": {
+        "doc": "./Tutorials",
+        "test": "./dist/Tests"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Smart-Programs/mixer-client-node.git"
+    },
+    "scripts": {
+        "auto": "tsc && node dist/Tests/AutoHostTest.js",
+        "build": "npm install && rimraf dist && tsc --declaration",
+        "chat": "tsc && node dist/Tests/ChatTest.js",
+        "ch": "tsc && node dist/Tests/LongChatTest.js",
+        "constellation": "tsc && node dist/Tests/ConstellationTest.js",
+        "const": "tsc && node dist/Tests/LongConstTest.js",
+        "test": "npm install && npm run chat && npm run constellation"
+    },
+    "dependencies": {
+        "request": "latest",
+        "request-promise": "latest",
+        "ws": "latest"
+    },
+    "devDependencies": {
+        "@types/node": "latest",
+        "@types/request-promise": "latest",
+        "@types/ws": "latest",
+        "rimraf": "latest"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
 }
