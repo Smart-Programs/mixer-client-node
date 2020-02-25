@@ -5,23 +5,26 @@ import { toJSON } from '../Util/HelperFunctions'
 class ConstellationService extends EventEmitter {
     private sockets: Map<number, WebSocket> = new Map()
     private events: Map<number, string[]> = new Map()
-    private subscribingTo: { number?: string[] } = {}
-    private unsubscribingTo: { number?: string[] } = {}
-    private currentId = 0
+    private subscribingTo: Map<number, { number?: string[] }> = new Map()
+    private unsubscribingTo: Map<number, { number?: string[] }> = new Map()
+    private currentId: Map<number, number> = new Map()
     private subNumber = 0
     private splitCount = 100
 
     constructor(private clientid: string) {
         super()
 
-        this.createSocket(0)
+        this.createSocket(0, 'constructor')
     }
 
     /*
      * Create the constellation socket
      */
-    private createSocket(number: number) {
-        this.currentId = 0
+    private createSocket(number: number, from?) {
+        // console.log('Create Socket.', number, 'From:', from)
+        this.currentId.set(number, 0)
+        this.subscribingTo.set(number, {})
+        this.unsubscribingTo.set(number, {})
 
         if (
             number &&
@@ -55,23 +58,28 @@ class ConstellationService extends EventEmitter {
     /*
      * Ping the chat to fix disconnect issues
      */
-    private timeout: NodeJS.Timeout
-    private pingId = 0
+    private timeout: Map<number, NodeJS.Timeout> = new Map()
+    private pingId: Map<number, number> = new Map()
     private ping(num: number) {
-        // Send ping every 5 minutes to ensure the connection is solid
+        // Send ping every 5 seconds to ensure the connection is solid
         setTimeout(() => this.sendPing(num), 1000 * 5)
 
-        if (this.timeout) clearTimeout(this.timeout)
-        // If the ping does not get responded too in 1 second restart the socket
-        this.timeout = setTimeout(() => this.createSocket(num), 1000)
+        if (this.timeout.get(num)) clearTimeout(this.timeout.get(num))
     }
 
     private sendPing(num: number) {
         if (this.sockets.has(num) && this.sockets.get(num).readyState !== 1)
             return
-        if (this.currentId > 100000000) this.currentId = 0
-        this.pingId = ++this.currentId
-        this.sendPacket('ping', null, this.pingId, num)
+        if (this.currentId.get(num) > 100000000) this.currentId.set(num, 0)
+        this.pingId.set(num, this.currentId.get(num) + 1)
+        this.currentId.set(num, this.pingId.get(num))
+        this.sendPacket('ping', null, this.pingId.get(num), num)
+
+        // If the ping does not get responded too in 1 second restart the socket
+        this.timeout.set(
+            num,
+            setTimeout(() => this.createSocket(num, 'pingTimeout'), 1000)
+        )
     }
 
     /*
@@ -102,7 +110,7 @@ class ConstellationService extends EventEmitter {
         this.sockets
             .get(number)
             .addEventListener('close', () =>
-                setTimeout(() => this.createSocket(number), 500)
+                setTimeout(() => this.createSocket(number, 'socketClose'), 500)
             )
 
         this.sockets
@@ -120,9 +128,13 @@ class ConstellationService extends EventEmitter {
                 if (data.event === 'hello') return this.emit('open', data.data)
 
                 if (data.type === 'reply') {
-                    if (data.id in this.subscribingTo) {
-                        const events = this.subscribingTo[data.id]
-                        delete this.subscribingTo[data.id]
+                    if (this.subscribingTo.get(number)[data.id]) {
+                        const events = this.subscribingTo.get(number)[data.id]
+
+                        const newEvents = this.subscribingTo.get(number)
+                        delete newEvents[data.id]
+                        this.subscribingTo.set(number, newEvents)
+
                         if (data.error)
                             this.emit(data.type, {
                                 result: data.result,
@@ -137,9 +149,13 @@ class ConstellationService extends EventEmitter {
                             this.events.set(number, [...old, ...events])
                             this.emit('subscribe', { events })
                         }
-                    } else if (data.id in this.unsubscribingTo) {
-                        const events = this.unsubscribingTo[data.id]
-                        delete this.unsubscribingTo[data.id]
+                    } else if (this.unsubscribingTo.get(number)[data.id]) {
+                        const events = this.unsubscribingTo.get(number)[data.id]
+
+                        const newEvents = this.unsubscribingTo.get(number)
+                        delete newEvents[data.id]
+                        this.unsubscribingTo.set(number, newEvents)
+
                         if (data.error)
                             this.emit(data.type, {
                                 result: data.result,
@@ -156,8 +172,8 @@ class ConstellationService extends EventEmitter {
                             )
                             this.emit('unsubscribe', { events })
                         }
-                    } else if (data.id === this.pingId) {
-                        if (data.error) this.createSocket(number)
+                    } else if (data.id === this.pingId.get(number)) {
+                        if (data.error) this.createSocket(number, 'pingError')
                         else this.ping(number)
                     } else this.emit(data.type, data)
                 } else if (data.data && data.data.payload) {
@@ -235,13 +251,20 @@ class ConstellationService extends EventEmitter {
             })
 
             if (event.length > 0) {
-                const c = this.events.has(number)
-                    ? this.events.get(number).length + event.length
-                    : event.length
+                let subbingToCount = 0
 
-                if (num === undefined && c >= this.splitCount) {
-                    this.subNumber++
-                    this.createSocket(this.subNumber)
+                for (let i in this.subscribingTo.get(number)) {
+                    subbingToCount += this.subscribingTo.get(number)[i].length
+                }
+
+                const c = this.events.has(number)
+                    ? this.events.get(number).length +
+                      event.length +
+                      subbingToCount
+                    : event.length + subbingToCount
+
+                if (!num && c >= this.splitCount) {
+                    this.createSocket(++this.subNumber, 'subCountHigher')
                 }
 
                 const threshold = Math.floor(
@@ -253,8 +276,13 @@ class ConstellationService extends EventEmitter {
                 )
                     this.resetSubNumber()
 
-                const id = ++this.currentId
-                this.subscribingTo[id] = event
+                const id = this.currentId.get(number) + 1
+                this.currentId.set(number, id)
+
+                const newEvents = this.subscribingTo.get(number)
+                newEvents[id] = event
+                this.subscribingTo.set(number, newEvents)
+
                 this.sendPacket('livesubscribe', { events: event }, id, number)
             } else {
                 this.emit('warning', {
@@ -291,7 +319,7 @@ class ConstellationService extends EventEmitter {
 
         this.events.forEach((val, key) => {
             if (this.sockets.get(key).readyState !== 1) {
-                this.createSocket(key)
+                this.createSocket(key, 'socketNotReadyUnsub')
             }
         })
 
@@ -306,8 +334,13 @@ class ConstellationService extends EventEmitter {
             })
         } else {
             events.forEach((items, num) => {
-                const id = ++this.currentId
-                this.unsubscribingTo[id] = items
+                const id = this.currentId.get(num) + 1
+                this.currentId.set(num, id)
+
+                const newEvents = this.unsubscribingTo.get(num)
+                newEvents[id] = items
+                this.unsubscribingTo.set(num, newEvents)
+
                 this.sendPacket('liveunsubscribe', { events: items }, id, num)
             })
         }
