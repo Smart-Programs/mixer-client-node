@@ -11,7 +11,7 @@ class ConstellationService extends EventEmitter {
     private subNumber = 0
     private splitCount = 2000
 
-    constructor(private clientid: string) {
+    constructor (private clientid: string) {
         super()
 
         this.createSocket(0, 'constructor')
@@ -20,7 +20,7 @@ class ConstellationService extends EventEmitter {
     /*
      * Create the constellation socket
      */
-    private createSocket(number: number, from?) {
+    private createSocket (number: number, from?) {
         // console.log('Create Socket.', number, 'From:', from)
         this.currentId.set(number, 0)
         this.subscribingTo.set(number, {})
@@ -60,14 +60,14 @@ class ConstellationService extends EventEmitter {
      */
     private timeout: Map<number, NodeJS.Timeout> = new Map()
     private pingId: Map<number, number> = new Map()
-    private ping(num: number) {
+    private ping (num: number) {
         // Send ping every 5 seconds to ensure the connection is solid
         setTimeout(() => this.sendPing(num), 1000 * 5)
 
         if (this.timeout.get(num)) clearTimeout(this.timeout.get(num))
     }
 
-    private sendPing(num: number) {
+    private sendPing (num: number) {
         if (this.sockets.has(num) && this.sockets.get(num).readyState !== 1)
             return
         if (this.currentId.get(num) > 100000000) this.currentId.set(num, 0)
@@ -86,7 +86,7 @@ class ConstellationService extends EventEmitter {
      * Get the event's that you are subscribed to
      * Returns a string array
      */
-    public get subscribedEvents(): string[] {
+    public get subscribedEvents (): string[] {
         let subscribed = []
         this.events.forEach((items) => {
             subscribed = [...subscribed, ...items]
@@ -97,7 +97,7 @@ class ConstellationService extends EventEmitter {
     /*
      * Setup the socket event listener to emit events
      */
-    private eventListener(number: number) {
+    private eventListener (number: number) {
         this.sockets.get(number).once('open', () => this.ping(number))
 
         this.sockets
@@ -187,7 +187,7 @@ class ConstellationService extends EventEmitter {
     /*
      * Send the socket data
      */
-    private sendPacket(
+    private sendPacket (
         method: string,
         params: IParams,
         id: number = 0,
@@ -213,7 +213,7 @@ class ConstellationService extends EventEmitter {
         }
     }
 
-    private resetSubNumber() {
+    private resetSubNumber () {
         this.events.forEach((val, key) => {
             if (this.subNumber < key) return
             else if (val.length < this.splitCount) this.subNumber = key
@@ -224,7 +224,7 @@ class ConstellationService extends EventEmitter {
      * Subscribe to an event
      * Emits a subscribe event if successful
      */
-    public subscribe(event: string | string[], num?: number) {
+    public subscribe (event: string | string[], num?: number) {
         const number = num ? num : this.subNumber
 
         if (this.sockets.get(number).readyState !== 1) {
@@ -253,7 +253,7 @@ class ConstellationService extends EventEmitter {
             if (event.length > 0) {
                 let subbingToCount = 0
 
-                for (let i in this.subscribingTo.get(number)) {
+                for (const i in this.subscribingTo.get(number)) {
                     subbingToCount += this.subscribingTo.get(number)[i].length
                 }
 
@@ -301,8 +301,8 @@ class ConstellationService extends EventEmitter {
      * UbSubscribe to an event
      * Emits an unsubscribe event if successful
      */
-    public unsubscribe(event: string | string[]) {
-        let events: Map<number, string[]> = new Map()
+    public unsubscribe (event: string | string[]) {
+        const events: Map<number, string[]> = new Map()
         let hasSome = false
         event = typeof event === 'string' ? [event] : event
         event = event.filter((name) => {
