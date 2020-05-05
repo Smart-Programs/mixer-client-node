@@ -46,7 +46,7 @@
         "ws": "latest"
     },
     "devDependencies": {
-        "@types/node": "latest",
+        "@types/node": "^13.13.4",
         "@types/request-promise": "latest",
         "@types/ws": "latest",
         "rimraf": "latest"
