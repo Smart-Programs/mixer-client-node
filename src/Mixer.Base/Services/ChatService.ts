@@ -15,7 +15,7 @@ class ChatService extends EventEmitter {
     private currentId = 0
     private client: Client
 
-    constructor(client: Client) {
+    constructor (client: Client) {
         super()
         this.client = client
     }
@@ -23,7 +23,7 @@ class ChatService extends EventEmitter {
     /*
      * Join a chat
      */
-    public join(
+    public join (
         userid: number,
         channelid: number,
         autoReconnect: boolean = false
@@ -49,7 +49,7 @@ class ChatService extends EventEmitter {
         })
     }
 
-    private connectTheChat(
+    private connectTheChat (
         channelid: number,
         autoReconnect: boolean
     ): Promise<WebSocket> {
@@ -90,7 +90,7 @@ class ChatService extends EventEmitter {
      */
     private timeout: NodeJS.Timeout
     private pingId: number
-    private ping(channelid: number) {
+    private ping (channelid: number) {
         if (this.timeout) clearTimeout(this.timeout)
 
         this.timeout = setTimeout(() => {
@@ -109,7 +109,7 @@ class ChatService extends EventEmitter {
     /*
      * Setup the event listeners for the sockets
      */
-    private hookEventListeners(channelid: number, authkey: string) {
+    private hookEventListeners (channelid: number, authkey: string) {
         this.listener.set(channelid, true)
 
         this.socket.get(channelid).addEventListener('open', () => {
@@ -253,13 +253,13 @@ class ChatService extends EventEmitter {
         })
     }
 
-    public unlisten(channelid: number) {
+    public unlisten (channelid: number) {
         const id =
             this.socket.size === 1 ? this.socket.keys().next().value : channelid
         if (id && this.chatSocket(id)) this.listener.set(id, false)
     }
 
-    public listen(channelid: number) {
+    public listen (channelid: number) {
         const id =
             this.socket.size === 1 ? this.socket.keys().next().value : channelid
         if (id && this.chatSocket(id)) this.listener.set(id, true)
@@ -268,14 +268,14 @@ class ChatService extends EventEmitter {
     /*
      * Get a list of the chats you are connected to
      */
-    public get connectedChats(): number[] {
+    public get connectedChats (): number[] {
         return [...this.socket.keys()]
     }
 
     /*
      * Get a specific chat socket
      */
-    public chatSocket(id: number): any {
+    public chatSocket (id: number): any {
         return this.socket.get(id)
     }
 
@@ -286,7 +286,7 @@ class ChatService extends EventEmitter {
     /*
      * Send the server a packet of info
      */
-    private sendPacket(
+    private sendPacket (
         method: string,
         args: any[],
         channelid: number,
@@ -336,7 +336,7 @@ class ChatService extends EventEmitter {
     /*
      * Send a chat message to a channel
      */
-    public sendMessage(
+    public sendMessage (
         message: string,
         channelid = this.socket.size === 1 ? this.socket.keys().next().value : 0
     ) {
@@ -392,7 +392,7 @@ class ChatService extends EventEmitter {
     /*
      * Send a whisper message to a user in a channel
      */
-    public sendWhisper(
+    public sendWhisper (
         message: string,
         sendToUser: string,
         channelid = this.socket.size === 1 ? this.socket.keys().next().value : 0
@@ -451,7 +451,7 @@ class ChatService extends EventEmitter {
     /*
      * Delete a message
      */
-    public deleteMessage(
+    public deleteMessage (
         messageID: string,
         channelid = this.socket.size === 1 ? this.socket.keys().next().value : 0
     ) {
@@ -485,7 +485,7 @@ class ChatService extends EventEmitter {
     /*
      * Clear chat
      */
-    public clearChat(
+    public clearChat (
         channelid = this.socket.size === 1 ? this.socket.keys().next().value : 0
     ) {
         if (this.socket.get(channelid)) {
@@ -504,7 +504,7 @@ class ChatService extends EventEmitter {
     /*
      * Timeout a user in a channel
      */
-    public timeoutUser(
+    public timeoutUser (
         username: string,
         time: string,
         channelid = this.socket.size === 1 ? this.socket.keys().next().value : 0
@@ -540,7 +540,7 @@ class ChatService extends EventEmitter {
     /*
      * Purge a user in a channel
      */
-    public purgeUser(
+    public purgeUser (
         username: string,
         channelid = this.socket.size === 1 ? this.socket.keys().next().value : 0
     ) {
@@ -574,7 +574,7 @@ class ChatService extends EventEmitter {
     /*
      * Close the connection to a chat
      */
-    public close(
+    public close (
         channelid = this.socket.size === 1
             ? this.socket.keys().next().value
             : 0,
