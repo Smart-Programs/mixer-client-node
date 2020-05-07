@@ -49,7 +49,7 @@ class ChatService extends EventEmitter {
         })
     }
     
-    public joinWithAuthKey({userid, channelid, authKey, endpoints, autoReconnect = true} = {}) {
+    public joinWithAuthKey({userid, channelid, authKey, endpoints, autoReconnect = true}) {
         if (!this.client.user || userid !== this.client.user.userid) {
             let id: number
             if (this.client.user) id = this.client.user.channelid
