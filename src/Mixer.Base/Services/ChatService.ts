@@ -75,7 +75,7 @@ class ChatService extends EventEmitter {
             channelid,
             new WebSocket(endpoints[0])
         )
-        this.hookEventListeners(channelid, response.authkey)
+        this.hookEventListeners(channelid, authkey)
     }
 
     private connectTheChat (
