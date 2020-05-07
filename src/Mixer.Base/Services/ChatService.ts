@@ -48,8 +48,8 @@ class ChatService extends EventEmitter {
             }
         })
     }
-    
-    public joinWithAuthKey({userid, channelid, authKey, endpoints, autoReconnect = true} = {}) {
+
+    public joinWithAuthKey ({userid, channelid, authKey, endpoints, autoReconnect = true} = {}) {
         if (!this.client.user || userid !== this.client.user.userid) {
             let id: number
             if (this.client.user) id = this.client.user.channelid
@@ -58,18 +58,18 @@ class ChatService extends EventEmitter {
                 userid,
             }
         }
-        
+
         if (!userid) userid = this.client.user.userid
         if (!channelid) channelid = this.client.user.channelid
-        
+
         if (!authKey) {
             return this.emit('error', "No AuthKey", channelid)
         } else if (!endpoints || !endpoints.length) {
             return this.emit('error', "No Enpoints", channelid)
         }
-        
+
         if (this.socket.get(channelid)) this.close(channelid, false)
-        
+
         this.autoReconnect.set(channelid, autoReconnect)
         this.socket.set(
             channelid,
