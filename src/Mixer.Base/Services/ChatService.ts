@@ -315,7 +315,7 @@ class ChatService extends EventEmitter {
     /*
      * Send the server a packet of info
      */
-    private sendPacket (
+    public sendPacket (
         method: string,
         args: any[],
         channelid: number,
