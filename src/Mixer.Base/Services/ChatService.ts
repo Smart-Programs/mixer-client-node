@@ -487,7 +487,7 @@ class ChatService extends EventEmitter {
         if (this.socket.get(channelid)) {
             if (messageID) {
                 this.sendPacket(
-                    'delelteMessage',
+                    'deleteMessage',
                     [messageID],
                     channelid,
                     ++this.currentId
