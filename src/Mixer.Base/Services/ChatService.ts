@@ -49,7 +49,7 @@ class ChatService extends EventEmitter {
         })
     }
 
-    public joinWithAuthKey ({userid, channelid, authKey, endpoints, autoReconnect = true}) {
+    public joinWithAuthKey ({userid, channelid, authKey, endpoints}) {
         if (!this.client.user || userid !== this.client.user.userid) {
             let id: number
             if (this.client.user) id = this.client.user.channelid
@@ -70,7 +70,7 @@ class ChatService extends EventEmitter {
 
         if (this.socket.get(channelid)) this.close(channelid, false)
 
-        this.autoReconnect.set(channelid, autoReconnect)
+        this.autoReconnect.set(channelid, false)
         this.socket.set(
             channelid,
             new WebSocket(endpoints[0])
