@@ -63,24 +63,28 @@ class ConstellationService extends EventEmitter {
     }
 
     /*
-     * Ping the chat to fix disconnect issues
+     * Ping the constellation socket to not disconnect
      */
+    private ensurePingTimeout: NodeJS.Timeout
     private timeout: NodeJS.Timeout
-    private pingId = 0
-    private ping() {
-        // Send ping every 5 minutes to ensure the connection is solid
-        setTimeout(() => this.sendPing, 1000 * 5)
-
+    private pingId: number
+    private ping (channelid: number) {
         if (this.timeout) clearTimeout(this.timeout)
-        // If the ping does not get responded too in 1 second restart the socket
-        this.timeout = setTimeout(() => this.createSocket, 1000)
-    }
+        if (this.ensurePingTimeout) clearTimeout(this.ensurePingTimeout)
 
-    private sendPing() {
-        if (this.socket.readyState !== 1) return
-        if (this.currentId > 100000000) this.currentId = 0
-        this.pingId = ++this.currentId
-        this.sendPacket('ping', null, this.pingId)
+        this.timeout = setTimeout(() => {
+            if (this.socket.readyState !== 1)
+                this.emit('error', { socket: 'Closed', from: 'Ping' })
+            else {
+                if (this.currentId > 100000000) this.currentId = 0
+                this.pingId = ++this.currentId
+                this.sendPacket('ping', null, this.pingId)
+                
+                this.ensurePingTimeout =setTimeout(() => {
+                    this.createSocket()
+                }, 1500) // ensure ping recieved in 1.5s
+            }
+        }, 1000 * 5) // send next ping in 5s from last revieved
     }
 
     /*
