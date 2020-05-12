@@ -117,22 +117,26 @@ class ChatService extends EventEmitter {
     /*
      * Ping the chat socket to not disconnect
      */
+    private ensurePingTimeout: NodeJS.Timeout
     private timeout: NodeJS.Timeout
     private pingId: number
     private ping (channelid: number) {
         if (this.timeout) clearTimeout(this.timeout)
+        if (this.ensurePingTimeout) clearTimeout(this.ensurePingTimeout)
 
         this.timeout = setTimeout(() => {
-            if (this.socket.get(channelid)) {
-                if (this.socket.get(channelid).readyState !== 1)
-                    this.emit('error', { socket: 'Closed', from: 'Ping' })
-                else {
-                    if (this.currentId > 100000000) this.currentId = 0
-                    this.pingId = ++this.currentId
-                    this.sendPacket('ping', null, channelid, this.pingId)
-                }
+            if (this.socket.get(channelid).readyState !== 1)
+                this.emit('error', { socket: 'Closed', from: 'Ping' })
+            else {
+                if (this.currentId > 100000000) this.currentId = 0
+                this.pingId = ++this.currentId
+                this.sendPacket('ping', null, channelid, this.pingId)
+                
+                this.ensurePingTimeout =setTimeout(() => {
+                    this.socket.get(channelid).close()
+                }, 1500) // ensure ping recieved in 1.5s
             }
-        }, 1000 * 60)
+        }, 1000 * 5) // send next ping in 5s from last revieved
     }
 
     /*
