@@ -514,6 +514,40 @@ class ChatService extends EventEmitter {
             })
         }
     }
+    
+    /*
+     * Restore a message
+     */
+    public restoreMessage (
+        messageID: string,
+        channelid = this.socket.size === 1 ? this.socket.keys().next().value : 0
+    ) {
+        if (this.socket.get(channelid)) {
+            if (messageID) {
+                this.sendPacket(
+                    'restoreMessage',
+                    [messageID],
+                    channelid,
+                    ++this.currentId
+                )
+            } else {
+                this.emit('warning', {
+                    code: 1000,
+                    id: 2,
+                    reason: 'You must specify the id of the message to restore',
+                    warning: "Can't Send Packet",
+                })
+            }
+        } else {
+            this.emit('warning', {
+                code: 1000,
+                id: 2,
+                reason:
+                    'No ChannelID Specified, you MUST specify this when connected to more than one chat',
+                warning: "Can't Send Packet",
+            })
+        }
+    }
 
     /*
      * Clear chat
