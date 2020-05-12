@@ -68,7 +68,7 @@ class ConstellationService extends EventEmitter {
     private ensurePingTimeout: NodeJS.Timeout
     private timeout: NodeJS.Timeout
     private pingId: number
-    private ping (channelid: number) {
+    private ping () {
         if (this.timeout) clearTimeout(this.timeout)
         if (this.ensurePingTimeout) clearTimeout(this.ensurePingTimeout)
 
