@@ -13,7 +13,7 @@ class ConstellationService extends EventEmitter {
     private unsubscribingTo: { number?: string[] } = {}
     private currentId = 0
 
-    constructor(private clientid: string) {
+    constructor (private clientid: string) {
         super()
 
         this.createSocket()
@@ -22,7 +22,7 @@ class ConstellationService extends EventEmitter {
     /*
      * Create the constellation socket
      */
-    private createSocket() {
+    private createSocket () {
         this.shouldClose = false
         if (this.socket && this.socket.readyState === 1) return
 
@@ -50,12 +50,12 @@ class ConstellationService extends EventEmitter {
         }
     }
 
-    public start() {
+    public start () {
         this.createSocket()
     }
 
     private shouldClose = false
-    public stop() {
+    public stop () {
         if (this.socket) {
             this.shouldClose = true
             this.socket.close()
@@ -79,8 +79,8 @@ class ConstellationService extends EventEmitter {
                 if (this.currentId > 100000000) this.currentId = 0
                 this.pingId = ++this.currentId
                 this.sendPacket('ping', null, this.pingId)
-                
-                this.ensurePingTimeout =setTimeout(() => {
+
+                this.ensurePingTimeout = setTimeout(() => {
                     this.createSocket()
                 }, 1500) // ensure ping recieved in 1.5s
             }
@@ -91,14 +91,14 @@ class ConstellationService extends EventEmitter {
      * Get the event's that you are subscribed to
      * Returns a string array
      */
-    public get subscribedEvents(): string[] {
+    public get subscribedEvents (): string[] {
         return [...this.events]
     }
 
     /*
      * Setup the socket event listener to emit events
      */
-    private eventListener() {
+    private eventListener () {
         this.socket.addEventListener('open', this.ping)
 
         this.socket.addEventListener('error', (e) => {
@@ -168,7 +168,7 @@ class ConstellationService extends EventEmitter {
     /*
      * Send the socket data
      */
-    private sendPacket(method: string, params: IParams, id: number = 0) {
+    private sendPacket (method: string, params: IParams, id: number = 0) {
         const packet: IPacket = {
             id,
             method,
@@ -193,7 +193,7 @@ class ConstellationService extends EventEmitter {
      * Subscribe to an event
      * Emits a subscribe event if successful
      */
-    public subscribe(event: string | string[]) {
+    public subscribe (event: string | string[]) {
         if (this.socket.readyState !== 1) {
             this.once('open', () => {
                 this.subscribe(event)
@@ -236,7 +236,7 @@ class ConstellationService extends EventEmitter {
      * UbSubscribe to an event
      * Emits an unsubscribe event if successful
      */
-    public unsubscribe(event: string | string[]) {
+    public unsubscribe (event: string | string[]) {
         event = typeof event === 'string' ? [event] : event
         event = event.filter((name) => this.events.includes(name))
 
