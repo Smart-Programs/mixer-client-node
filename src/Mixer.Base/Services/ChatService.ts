@@ -130,7 +130,7 @@ class ChatService extends EventEmitter {
             else {
                 if (this.currentId > 100000000) this.currentId = 0
                 this.pingId = ++this.currentId
-                this.sendPacket('ping', null, channelid, this.pingId)
+                this.sendPacket('ping', [], channelid, this.pingId)
                 
                 this.ensurePingTimeout =setTimeout(() => {
                     this.socket.get(channelid).close()
