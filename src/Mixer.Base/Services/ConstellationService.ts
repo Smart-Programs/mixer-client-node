@@ -78,7 +78,7 @@ class ConstellationService extends EventEmitter {
             else {
                 if (this.currentId > 100000000) this.currentId = 0
                 this.pingId = ++this.currentId
-                this.sendPacket('ping', [], this.pingId)
+                this.sendPacket('ping', null, this.pingId)
                 
                 this.ensurePingTimeout =setTimeout(() => {
                     this.createSocket()
@@ -276,5 +276,5 @@ interface IPacket {
 }
 
 interface IParams {
-    events: any[]
+    events: string[]
 }
