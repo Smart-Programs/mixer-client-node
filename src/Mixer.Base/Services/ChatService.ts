@@ -273,8 +273,6 @@ class ChatService extends EventEmitter {
         })
 
         this.socket.get(channelid).addEventListener('close', (data) => {
-            this.close(channelid, this.autoReconnect.get(channelid))
-
             if (
                 this.listener.get(channelid) &&
                 !this.autoReconnect.get(channelid)
@@ -283,6 +281,8 @@ class ChatService extends EventEmitter {
                     code: data.code,
                     reason: data.reason,
                 })
+            
+            this.close(channelid, this.autoReconnect.get(channelid))
         })
     }
 
