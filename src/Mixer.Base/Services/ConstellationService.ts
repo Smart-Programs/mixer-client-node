@@ -276,5 +276,5 @@ interface IPacket {
 }
 
 interface IParams {
-    events: string[]
+    events: string[] | undefined[]
 }
