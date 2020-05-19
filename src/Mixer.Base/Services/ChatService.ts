@@ -131,8 +131,8 @@ class ChatService extends EventEmitter {
                 if (this.currentId > 100000000) this.currentId = 0
                 this.pingId = ++this.currentId
                 this.sendPacket('ping', [], channelid, this.pingId)
-                
-                this.ensurePingTimeout =setTimeout(() => {
+
+                this.ensurePingTimeout = setTimeout(() => {
                     this.socket.get(channelid).close()
                 }, 1500) // ensure ping recieved in 1.5s
             }
@@ -281,7 +281,7 @@ class ChatService extends EventEmitter {
                     code: data.code,
                     reason: data.reason,
                 })
-            
+
             this.close(channelid, this.autoReconnect.get(channelid))
         })
     }
@@ -514,7 +514,7 @@ class ChatService extends EventEmitter {
             })
         }
     }
-    
+
     /*
      * Restore a message
      */
